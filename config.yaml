@@ -645,7 +645,6 @@ params:
     # Show this title when cursor move on.
     title: Follow me on GitHub ฅ( ̳• ◡ • ̳)ฅ
 
-
   # ---------------------------------------------------------------
   # TODO
   # 字体设置（暂时未实现）
@@ -1131,3 +1130,4 @@ params:
   css: css
   js: js
   images: imgs
+
