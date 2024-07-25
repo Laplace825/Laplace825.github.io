@@ -487,7 +487,7 @@ params:
       plugin: waline
     # 是否开启页面访问数显示
     views:
-      enable: false
+      enable: true 
       # 页面访问统计插件，支持busuanzi, waline, leancloud
       # Page views counter plugin, support: busuanzi, waline, leancloud
       plugin: busuanzi
@@ -792,7 +792,7 @@ params:
   comments:
     # 开启评论组件
     # If true, will show comment component in post end.
-    enable: false   
+    enable: true  
     # 设置默认使用的评论插件
     # 可选值：livere | waline | utterances | artalk | giscus
     # Choose a comment system to be displayed by default.
@@ -802,7 +802,7 @@ params:
     # 如果设置为 false，将采用 active 参数的那个插件
     # Setting `true` means remembering the comment system selected by 
     # the visitor, otherwise use the `active` setting comment system.
-    storage: true
+    storage: false 
     # TODO
     # Lazyload all comment systems.
     # lazyload: false
@@ -876,16 +876,16 @@ params:
   giscus:
     # Github 仓库地址，格式：用户名/仓库名称
     # Github repository owner and name
-    repo: username/repo-name
+    repo: laplace825/blog-comments
     # Giscus 生成的仓库 Id
     # Generate repository Id from Giscus
-    repoId: #<repo-id>
+    repoId: R_kgDOMZTRWA
     # 讨论区的分类名称
     # Github discussions category
     category: Comments
     # 讨论区分类 ID
     # Generate category Id from Giscus
-    categoryId: #<category-id>
+    categoryId: DIC_kwDOMZTRWM4ChDiv
     # 帖子上的反应将会显示在评论前
     # The reactions for post will be shown before the comments
     reactions: false
@@ -899,7 +899,7 @@ params:
     mapping: title
     # 评论输入框的位置，可选值： top | bottom
     # Aavilable value: top | bottom
-    inputPosition: top
+    inputPosition: bottom
     # 主题可选值： light | light_high_contrast | light_protanopia | light_tritanopia | dark | dark_high_contrast | dark_protanopia | dark_tritanopia | dark_dimmed | transparent_dark | preferred_color_scheme
     # Available values: light | light_high_contrast | light_protanopia | light_tritanopia | dark | dark_high_contrast | dark_protanopia | dark_tritanopia | dark_dimmed | transparent_dark | preferred_color_scheme
     theme: preferred_color_scheme
