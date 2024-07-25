@@ -24,17 +24,7 @@ categories:
 
 ### Git的安装
 
-这里直接访问[Git - Downloads (git-scm.com)](https://git-scm.com/downloads)安装即可。
-
-1. 选择Windows<br>![Gitinstall](/images/Postimages/Hugo-WebSite-1.png)
-
-2. 选择对应的版本安装即可，64位选64位或32位均可，32位机选32位<br>![Gitinstall](/images/Postimages/Hugo-WebSite-2.png)
-
-3. 然后一路 next ，选择你的安装路径即可。
-
-4. 安装完毕之后，随便找到一个文件夹然后鼠标右键显示更多选项，有Git Bash和Git GUI即可<br>![Gitinstall](/images/Postimages/Hugo-WebSite-3.png)
-
-5. 关于如何使用Git，请参阅其他Git教程。
+直接访问[Git - Downloads (git-scm.com)](https://git-scm.com/downloads)安装即可。
 
 ### Hugo安装
 
@@ -138,8 +128,7 @@ $ git branch -M main
 $ git push -u origin main
 ```
 
-6. 进入`https://github.com/<username>/<username>.github.io` (即之前创建的新仓库)，点击`Settings` 然后在左方栏目下点击`Pages` ，在`Build and deployment` 把`Source`改成`Github Actions` 并选择`Hugo` 然后点击下方的`Configure` ，在新界面右侧点击绿色按钮`Commit changes`<br> ![GithubPages](/images/Postimages/Hugo-WebSite-4.png)
-![GithubPages](/images/Postimages/Hugo-WebSite-5.png)<br>
+6. 进入`https://github.com/<username>/<username>.github.io` (即之前创建的新仓库)，点击`Settings` 然后在左方栏目下点击`Pages` ，在`Build and deployment` 把`Source`改成`Github Actions` 并选择`Hugo` 然后点击下方的`Configure` ，在新界面右侧点击绿色按钮`Commit changes`<br> ![GithubPages](../post-images/Hugo-WebSite.png)
 
 7. 等待一会儿，在`Pages`页面可以看见`Your site is live at ...`，点击`visit site` 即可访问博客。
 

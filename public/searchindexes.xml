@@ -4,7 +4,12 @@ Hello, friend! Here is a simple self-introduction 💬
 希望能遇到志同道合的朋友
 一个理想主义者，一个浪漫主义者。
 愿生活充满诗意，愿远方永远触手可及。
-感谢你的关注，我素未谋面的朋友。</content></entry><entry><title>C++中模版的基本使用技巧</title><url>/post/cpptrickstemplate/</url><categories><category>C++</category><category>C++ template meta programming</category></categories><tags><tag>C++</tag></tags><content type="html"><![CDATA[  这章是C++ Templates第五章的读书笔记，希望通过这章能帮助你学会模版的基本使用技巧👍。我们将搭建一个方法来判断某类型是否可迭代(是否存在迭代器)。
+感谢你的关注，我素未谋面的朋友。</content></entry><entry><title>GDB 5分钟快速入门</title><url>/post/gdb/</url><categories><category>tools</category></categories><tags><tag>tools</tag></tags><content type="html"><![CDATA[  一个简单快速的GDB使用入门，直接上手使用进行调试。
+GCC/G++ 编译文件 在使用gdb进行调试之前，需要使用GCC的编译器编译可执行文件，我们以C++代码为例，使用g++进行编译，此时应该带上编译选项-g确保生成调试信息，点击此处查看具体信息 GNU/GCC Debugging-Options 。
+$ g++ main.cc -g -o main // main.cc #include &amp;lt;iostream&amp;gt; int main() { std::cout &amp;lt;&amp;lt; &amp;#34;Hello\n&amp;#34;; return 0; } GDB Text User Interface (TUI) 其实gdb也是有UI的，一种终端接口，直接在终端中显示源文件、程序输出、程序寄存器等。点击此处查阅文档 GDB Text User Interface 。在使用时gdb，添加上选项-tui即可。如果直接使用gdb execution_file，那么也可以输入tui enable切换进入tui模式。
+$ gdb main -tui 开始调试 如果你正确使用了g++的-g选项，那么你应该可以在gdb打开后看见源代码在上方，命令窗口在下方。如下图，颜色不同仅仅是终端配置区别。这里我没有指定输出的可执行文件名，所以是a.out。 打上断点 我们可以看见各代码的行数，在gdb中，使用break，或简单地使用b打断点，例如我们在main函数处打断点则会在该函数的下面一行添加一个断点。我们也可以用delete或者clear清除断点，前者用于指定某个断点，后者则全部清空。
+$ b main # or you can also specific lines $ b 4 运行 使用run或者r，将直接运行至当前的第一个断点处，此时可以继续使用step或者s步过，也可以使用stepi或者si步入。可以看见直接输入s后代码框左边的箭头&amp;gt;指向了return 0，并且在命令行看见了运行结果。 此时当我们输入si的话，则需要layout asm查看汇编，因为这时候步入到主函数返回。我们看见当前的汇编恰好对应ret。 监视变量 现在我们修改一下源代码，如下并重新编译调试。
+// main.cc int foo(int&amp;amp; x){ x = 10; return x * x; } …  ]]></content></entry><entry><title>C++中模版的基本使用技巧</title><url>/post/cpptrickstemplate/</url><categories><category>C++</category><category>C++ template meta programming</category></categories><tags><tag>C++</tag></tags><content type="html"><![CDATA[  这章是C++ Templates第五章的读书笔记，希望通过这章能帮助你学会模版的基本使用技巧👍。我们将搭建一个方法来判断某类型是否可迭代(是否存在迭代器)。
 别名 在C++ 17以后，我们可以对变量模版进行别名，当然，我们也会包括类型模版的别名一同介绍。
 非类型模版别名 首先我定义一个这样的结构体，这个结构体里面只有一些值和类型。相信不难理解。
 template &amp;lt;typename T = size_t&amp;gt; struct MyContainer { static constexpr T value = 42; using value_type = T; }; 对于MyContainer这个类来说，如果我们需要使用内部的value或value_type，那我们就必须要通过MyContainer::value或者typename MyContainer::value_type获取，之所以后者加上typename进行修饰，是为了避免歧义，毕竟编译器并不能完美地分辨出value_type是不是一个类型，当然，现在的编译器可能在部分场合也可以达成了，但是还是推荐加上typename。为了方便获取到value而不用每次都用::value，我们为MyContainer::value起个别名。
@@ -96,13 +101,8 @@ Web标准 使一套代码的在多种浏览器下的通用 使网站更易被搜
 //判断是否是中文字符的函数 inline bool CheckChinese(unsigned char){ return char &amp;gt;= 0x80; } 该函数能很好的帮助我们判断一个字符是否是中文，是则返回true，不是则反之。
 //判断有几个中文字符 unsigned int ChineseNum(unsigned char* str){ unsigned int count{0}; //定义一个计数器 for(int i=0; str[i]; ++i){ if(CheckChinese(str[i])) ++count; } return count/2; } 对于一个中文字符而言，每次比较其 ASCII 码时需要比较两次，故最终return后需要对count/2处理。</content></entry><entry><title>Windows11关于如何在github.io上部署个人博客Hugo</title><url>/post/hugo-website/</url><categories><category>blog</category></categories><tags><tag>blog</tag></tags><content type="html"><![CDATA[  本人也是使用的hugo with github pages，在前期查询了大量的教程，最后终于算是成功了，这里记录一下自己的部署过程。
 1.需要的前置安装 包括下列三种：
-Git Golang(可不安装，但建议有) Hugo Git的安装 这里直接访问 Git - Downloads (git-scm.com) 安装即可。
-选择Windows
-选择对应的版本安装即可，64位选64位或32位均可，32位机选32位
-然后一路 next ，选择你的安装路径即可。
-安装完毕之后，随便找到一个文件夹然后鼠标右键显示更多选项，有Git Bash和Git GUI即可
-关于如何使用Git，请参阅其他Git教程。
-Hugo安装 首先我们使用到choco去安装hugo，先安装hugo，先以管理员权限打开powershell powershell -NoProfile -ExecutionPolicy unrestricted -Command &amp;#34;iex ((new-object net.webclient).DownloadString(&amp;#39;https://chocolatey.org/install.ps1&amp;#39;))&amp;#34; # 设置环境变量 SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin 然后使用 choco 安装 hugo (同样需要以管理员权限打开 powershell ) # 安装可能较慢 choco install hugo-extend 在 cmd 或者 powershell 中，我们可以使用以下命令查看 hugo 是否安装成功，如果成功则会显示版本。 &amp;gt; hugo version # cmd显示 hugo v0.119.0-等信息 使用 choco 安装golang，在powershell中使用下述命令即可 choco install golang Hugo本地部署 先新建一个文件夹作为博客的工作区。在这个文件夹内打开 Git Bash，输入下述命令，在 site 后面输入自己想创建的博客名称即可，这里以MyNewBlog为例 $ hugo new site MyNewBlog 然后转到这个文件夹内部 $ cd MyNewBlog 使用下述命令创建空的 Git 存储库 $ git init 下一步 …  ]]></content></entry><entry><title>关于我</title><url>/about.html</url><categories/><tags/><content type="html"> 我是正在一名学习计算机专业的学生
+Git Golang(可不安装，但建议有) Hugo Git的安装 直接访问 Git - Downloads (git-scm.com) 安装即可。
+Hugo安装 首先我们使用到choco去安装hugo，先安装hugo，先以管理员权限打开powershell powershell -NoProfile -ExecutionPolicy unrestricted -Command &amp;#34;iex ((new-object net.webclient).DownloadString(&amp;#39;https://chocolatey.org/install.ps1&amp;#39;))&amp;#34; # 设置环境变量 SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin 然后使用 choco 安装 hugo (同样需要以管理员权限打开 powershell ) # 安装可能较慢 choco install hugo-extend 在 cmd 或者 powershell 中，我们可以使用以下命令查看 hugo 是否安装成功，如果成功则会显示版本。 &amp;gt; hugo version # cmd显示 hugo v0.119.0-等信息 使用 choco 安装golang，在powershell中使用下述命令即可 choco install golang Hugo本地部署 先新建一个文件夹作为博客的工作区。在这个文件夹内打开 Git Bash，输入下述命令，在 site 后面输入自己想创建的博客名称即可，这里以MyNewBlog为例 $ hugo new site MyNewBlog 然后转到这个文件夹内部 $ cd MyNewBlog 使用下述命令创建空的 Git 存储库 $ git init 下一步安装主题，在 themes.gohugo.io 找到一个对应的主题安装即可，这里给出一般的安装方法(一般而言，每个主题都在 Github 有说明文档，会说明安装方法) $ git submodule add &amp;lt;https&amp;gt; …  ]]></content></entry><entry><title>关于我</title><url>/about.html</url><categories/><tags/><content type="html"> 我是正在一名学习计算机专业的学生
 希望能遇到志同道合的朋友
 一个理想主义者，一个浪漫主义者。
 愿生活充满诗意，愿远方永远触手可及。
