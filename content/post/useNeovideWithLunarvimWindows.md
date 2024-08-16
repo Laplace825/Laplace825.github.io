@@ -5,9 +5,9 @@ date: 2024-06-01
 lastmod: 2024-06-25
 description: "use neovide and lunarvim in Windows" 
 tags: 
-- tools
+- Tools
 categories: 
-- tools
+- Tools
 ---
 
 Windows 下 vscode 已经足够好了，但是还是很喜欢 neovide 的动画，也习惯了 vim 的各种快捷键，所以也把 lunarvim + neovim + neovide 在Windows下使用。
