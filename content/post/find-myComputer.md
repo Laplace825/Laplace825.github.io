@@ -8,7 +8,7 @@ lastmod: 2024-02-15
 
 tags: 
   - C++
-  - life
+  - Life
 categories:
 - C++
 

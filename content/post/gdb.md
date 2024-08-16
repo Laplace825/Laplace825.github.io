@@ -3,9 +3,9 @@ title: GDB 5分钟快速入门
 description: A 5 minutes brief introduction to GDB
 author: Laplace
 tags:
-  - tools
+  - Tools
 categories:
-  - tools
+  - Tools
 date: 2024-07-25
 ---
 一个简单快速的`GDB`使用入门，直接上手使用进行调试。

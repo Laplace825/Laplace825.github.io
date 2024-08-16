@@ -4,9 +4,9 @@ title:  "一些关于评价与成绩的想法"
 date: 2023-10-13
 description: "Some thoughts about grades"
 tags:
-  - life
+  - Life
 categories:
-- lifeRecode
+- LifeRecode
 ---
 
 如何满足外界的评价体系同时建立自己的评价体系，并且不陷入到仅"自我满足"的陷阱中？

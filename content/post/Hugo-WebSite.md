@@ -5,9 +5,9 @@ date: 2023-10-05
 lastmod: 2023-10-05
 description: "setup your blog with github.io and Hugo"
 tags: 
-  - blog
+  - Blog
 categories: 
-- blog
+- Blog
 ---
 
 本人也是使用的hugo with github pages，在前期查询了大量的教程，最后终于算是成功了，这里记录一下自己的部署过程。

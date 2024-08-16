@@ -4,9 +4,9 @@ title: "关于时间真假的一个思考"
 date: 2023-10-01
 description: "A thinking about time"
 tags:
-  - life
+  - Life
 categories:
-- lifeRecode
+- LifeRecode
 
 ---
 

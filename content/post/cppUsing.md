@@ -8,6 +8,7 @@ tags:
 categories:
 - C++
 - Effective Modern C++
+- C++ template meta programming
 ---
 
 很久没有更新博客了🫠，主要是(~~懒~~)学业繁忙，继续写点`C++`相关吧。
