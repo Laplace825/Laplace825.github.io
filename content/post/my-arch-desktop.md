@@ -29,13 +29,14 @@ categories:
 
 ### 执行脚本
 参照`github`，在安装时会提示选择项，推荐还是查看官方wiki [KooL's Hyprland - Dots wiki](https://github.com/JaKooLit/Hyprland-Dots/wiki/)
+
 ```bash
 git clone --depth=1 https://github.com/JaKooLit/Arch-Hyprland.git ~/Arch-Hyprland
 cd ~/Arch-Hyprland
 chmod +x install.sh
 ./install.sh
-
 ```
+
 ### 我的选项
 注意该安装脚本会自动安装`pipewire audio`并卸载`pulseaudio`，在安装脚本191行注释掉，就不会安装`pipewire`。
 不过个人建议使用`pipewire`。

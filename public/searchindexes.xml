@@ -5,7 +5,12 @@ Hello, friend! Here is a simple self-introduction 💬
 一个理想主义者，一个浪漫主义者。
 愿生活充满诗意，愿远方永远触手可及。
 感谢你的关注，我素未谋面的朋友。
-  </content></entry><entry><title>C++ Concept</title><url>/post/cpp-concept/</url><categories><category>C++</category><category>C++ template meta programming</category></categories><tags><tag>C++</tag></tags><content type="html"><![CDATA[  补一个 C++20的特性Concept，用于约束模板参数。 Concept 本质上是一种约束，用于限制模板参数的类型。
+  </content></entry><entry><title>Neovim下markdown实时预览神器Markview is All You Need!</title><url>/post/markviewallyouneed/</url><categories><category>Tools</category></categories><tags><tag>Tools</tag></tags><content type="html"><![CDATA[  一直没找到在neovim下能和typora,obsidian一样的实时预览markdown的插件，直到找到了markview.nvim。 这个插件可以在neovim里实时预览markdown文件，而不需要本地启动浏览器渲染。
+先来看看效果 我使用的是 onedark 主题 navarasu/onedark.nvim ，其他效果完全默认：
+Markview 安装 Markview的github链接 OXY2DEV/markview.nvim 。 按照官方的教程进行安装即可。还需要使用TSInstall安装html的语法高亮插件。需要确保安装了nvim-treesitter插件。 不过插件的dependencies里面已经包含了nvim-treesitter，所以不需要额外安装。
+:TSInstall html 使用 Hybrid Mode 确保已经安装好插件后，在你的配置文件中添加以下内容，这样当normal模式下光标所在行就会回到源码模式，而其他行保持 渲染显示。
+require(&#34;markview&#34;).setup({ modes = { &#34;n&#34;, &#34;no&#34;, &#34;c&#34; }, -- Change these modes -- to what you need hybrid_modes = { &#34;n&#34; }, -- Uses this feature on -- normal mode -- This is nice to have callbacks = { on_enable = function (_, win) vim.wo[win].conceallevel = 2; vim.wo[win].concealcursor = &#34;c&#34;; end } }) 配置 由于我本人已经很喜欢默认效果了，如需特别配置，推荐参考官方wiki OXY2DEV/markview.nvim/wiki 。
+  ]]></content></entry><entry><title>C++ Concept</title><url>/post/cpp-concept/</url><categories><category>C++</category><category>C++ template meta programming</category></categories><tags><tag>C++</tag></tags><content type="html"><![CDATA[  补一个 C++20的特性Concept，用于约束模板参数。 Concept 本质上是一种约束，用于限制模板参数的类型。
 本文希望你使用C++ 20标准 希望根据你的编译器添加-std=c++20的参数，例如
 $ g++ file.cc -std=c++20 # for g++ $ clang++ file.cc -std=c++20 # for clang++ 制作一个判断迭代器是否存在的方法 上篇谈到的C++中模板的基本使用技巧 中，我们提到在C++ 20以前如何判断一个类型 是否具有迭代器，我们可以使用SFINAE技巧，和括号表达式的方法对应有类型进行判断，但是这种比较难看😵。
 template &amp;lt;typename T&amp;gt; struct is_iterable { using type = decltype(( begin(std::declval&amp;lt;T&amp;amp;&amp;gt;()) != end(std::declval&amp;lt;T&amp;amp;&amp;gt;()), // begin/end and operator != void(), // Handle evil operator , ++std::declval&amp;lt;decltype(begin(std::declval&amp;lt;T&amp;amp;&amp;gt;()))&amp;amp;&amp;gt;(), // operator++ void(*begin(std::declval&amp;lt;T&amp;amp;&amp;gt;())), // operator* std::true_type{})); }; 使用Concept 一个简单的加和例子 先来个简单的例子，我们该如何使用Concept来约束来个数相加的函数？
