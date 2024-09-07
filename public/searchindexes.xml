@@ -5,7 +5,12 @@ Hello, friend! Here is a simple self-introduction 💬
 一个理想主义者，一个浪漫主义者。
 愿生活充满诗意，愿远方永远触手可及。
 感谢你的关注，我素未谋面的朋友。
-  </content></entry><entry><title>Neovim下markdown实时预览神器Markview is All You Need!</title><url>/post/markviewallyouneed/</url><categories><category>Tools</category></categories><tags><tag>Tools</tag></tags><content type="html"><![CDATA[  一直没找到在neovim下能和typora,obsidian一样的实时预览markdown的插件，直到找到了markview.nvim。 这个插件可以在neovim里实时预览markdown文件，而不需要本地启动浏览器渲染。
+  </content></entry><entry><title>解决Hyprland Linux QQ中文输入法问题</title><url>/post/chineseinputlinuxqq/</url><categories><category>Linux</category></categories><tags><tag>Desktop</tag><tag>ArchLinux</tag><tag>Linux</tag></tags><content type="html"><![CDATA[  Hyprland桌面，QQ无法使用fcitx5输入中文。这里记录一下解决方法。
+linuxqq 这里是用paru直接安装的linuxqq
+解决中文输入 由于是wayland桌面，所以需要在/etc/environment中添加`
+QT_IM_MODULE=fcitx XMODIFIERS=@im=fcitx 方法一、直接改启动脚本 但是还是无法输入中文，我直接更改linuxqq的启动脚本，添加启动参数， sudo vim /usr/bin/linuxqq，最后一行改为
+#!/bin/bash if [ -d ~/.config/QQ/versions ]; then find ~/.config/QQ/versions -name sharp-lib -type d -exec rm -r {} \; 2&gt;/dev/null fi rm -rf ~/.config/QQ/crash_files/* XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-~/.config} if [[ -f &#34;${XDG_CONFIG_HOME}/qq-flags.conf&#34; ]]; then mapfile -t QQ_USER_FLAGS &lt;&lt;&lt;&#34;$(grep -v &#39;^#&#39; &#34;${XDG_CONFIG_HOME}/qq-flags.conf&#34;)&#34; echo &#34;User flags:&#34; ${QQ_USER_FLAGS[@]} fi # 将最后一行改为下面这样 exec /opt/QQ/qq ${QQ_USER_FLAGS[@]} --ozone-platform-hint=auto --enable-wayland-ime &#34;$@&#34; 方法二、添加启动参数 个人更推荐这个方法，否则每次更新linuxqq都需要重新改启动脚本。 通过启动脚本我们也知道可以在~/.config/目录下添加qq-flags.conf文件，添加启动参数。
+echo &#34;--ozone-platform-hint=auto\n--enable-wayland-ime&#34; &gt; ~/.config/qq-flags.conf 重启Linuxqq   ]]></content></entry><entry><title>Neovim下markdown实时预览神器Markview is All You Need!</title><url>/post/markviewallyouneed/</url><categories><category>Tools</category></categories><tags><tag>Tools</tag></tags><content type="html"><![CDATA[  一直没找到在neovim下能和typora,obsidian一样的实时预览markdown的插件，直到找到了markview.nvim。 这个插件可以在neovim里实时预览markdown文件，而不需要本地启动浏览器渲染。
 先来看看效果 我使用的是 onedark 主题 navarasu/onedark.nvim ，其他效果完全默认：
 Markview 安装 Markview的github链接 OXY2DEV/markview.nvim 。 按照官方的教程进行安装即可。还需要使用TSInstall安装html的语法高亮插件。需要确保安装了nvim-treesitter插件。 不过插件的dependencies里面已经包含了nvim-treesitter，所以不需要额外安装。
 :TSInstall html 使用 Hybrid Mode 确保已经安装好插件后，在你的配置文件中添加以下内容，这样当normal模式下光标所在行就会回到源码模式，而其他行保持 渲染显示。
