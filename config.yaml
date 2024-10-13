@@ -287,7 +287,7 @@ params:
   avatar:
     # 设置显示头像的相对路径
     # Replace the default image and set the url here.
-    url: /imgs/kana.png
+    url: /imgs/AnnaYanami.png
     # 开启头像的圆形显示效果
     # If true, the avatar will be displayed in circle.
     rounded: true
