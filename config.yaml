@@ -489,7 +489,7 @@ params:
       plugin: waline
     # 是否开启页面访问数显示
     views:
-      enable: false
+      enable: true
       # 页面访问统计插件，支持busuanzi, waline, leancloud
       # Page views counter plugin, support: busuanzi, waline, leancloud
       plugin: busuanzi
@@ -940,7 +940,7 @@ params:
     # laId: "3HTyuds4Bm5FaDq4"
     # 百度统计
     # Baidu Analytics
-    #baidu: #<anaytics_id>
+    # baidu: 50e470037ab79693f5d9f404edfe7253
     # 谷歌统计
     # Google Analytics
     #google: #<anaytics_id>

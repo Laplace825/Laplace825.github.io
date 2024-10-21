@@ -137,11 +137,11 @@ NexT.utils = {
 
   fmtBusuanzi: function () {
     setTimeout(function(){
-      const bszUV = document.getElementById('busuanzi_value_site_uv');    
+      const bszUV = document.getElementById('busuanzi_site_uv');    
       if (bszUV) {
         bszUV.innerText = NexT.utils.numberFormat(bszUV.innerText);
       }
-      const bszPV = document.getElementById('busuanzi_value_site_pv');
+      const bszPV = document.getElementById('busuanzi_site_pv');
       if (bszPV) {
         bszPV.innerText = NexT.utils.numberFormat(bszPV.innerText);
       }
@@ -211,6 +211,7 @@ NexT.utils = {
   },
 
   checkDOMExist: function (selector) {
+    console.log(selector)
     return document.querySelector(selector) != null;
   },
 

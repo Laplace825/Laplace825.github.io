@@ -40,7 +40,9 @@ analytics:
   laWidget: https://v6-widget.51.la/v6/laId/quote.js?theme=0&col=true&f=12&display=0,0,0,1,0,1,1,1
   baidu: https://hm.baidu.com/hm.js?
   google: https://www.googletagmanager.com/gtag/js?id=
-  busuanzi: https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js
+  # busuanzi: https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js
+  # busuanzi: https://busuanzi.icodeq.com/busuanzi.pure.mini.js
+  busuanzi: https://busuanzi.9420.ltd/js
 
 # 文章分享
 # Share
