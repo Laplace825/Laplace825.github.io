@@ -4,5 +4,5 @@ hugo --cleanDestinationDir -F -D -E
 git add .
 git commit -m "rebuilding site $(date)"
 # 拉取远程仓库的更新
-git pull
+git pull -r
 git push 
