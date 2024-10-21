@@ -4,6 +4,17 @@
 
 + My blog is powered by `Hugo && Hugo-Next.Gemini`, you can reach `Hugo-Next` theme at [Hugo-Next](https://github.com/hugo-next/hugo-theme-next)
 
+## Welcome to Add your site !
+
+Welcome to All friends who want to add their site to my blogroll! Just send me a message like this:
+
+```yml
+- name: your name
+  desc: your slogan
+  avatar: your avatar link (or just the file)
+  link: your site url
+```
+
 ## REFERENCE
 + [ ] refer to [如何将嘉然live2D添加到博客网站当看板娘](https://www.moeshou.com/310/) and config file [jsdeliver/gh/journey-ad/blog-img](https://www.jsdelivr.com/package/gh/journey-ad/blog-img?tab=files)
   + I add a live2d Diana in `/layouts/post/footer.html` 
