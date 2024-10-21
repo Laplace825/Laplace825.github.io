@@ -305,7 +305,8 @@ params:
       # 组件类型，可选值为： 51la, busuanzi
       # 使用51la时需要注册账号：https://invite.51.la/
       # Plguin value is: 51la, busuanzi
-      plugin: 51la
+      # plugin: 51la
+      plugin: busuanzi
 
   # 社交链接地址
   # 用法： `Key: 名称 || 链接地址 || 图标`
@@ -510,10 +511,10 @@ params:
     # 是否开启捐赠按钮，开启后将在每个文章页面底部显示
     # If true, a donate button will be displayed 
     # in every article by default.
-    enable: false
+    enable: true
     # 是否开启捐赠方式的动画效果
     # If true, the donate type title will with animation.
-    animation: false
+    animation: true
     # 捐赠信息的描述，支持 HTML 语法
     # Comment for donate and suppport HTML syntax
     comment: '<i class="fa-solid fa-mug-hot"></i>请我喝杯咖啡吧 ヾ(^▽^*)))'
@@ -522,8 +523,8 @@ params:
     # Donate type
     # Usage: `name:image url`
     reward:
-      # wechatpay: /imgs/wechat-pay.png
-      # alipay: /imgs/ali-pay.png
+      wechatpay: /imgs/wechat-pay.png
+      alipay: /imgs/ali-pay.png
       #paypal: /images/paypal.png
       #bitcoin: /images/bitcoin.png
 
@@ -542,8 +543,8 @@ params:
   # Post edit
   # Easily browse and edit blog source code online.
   postEdit:
-    enable: false
-    url: https://github.com/user-name/repo-name/tree/branch-name/subdirectory-name/
+    enable: true
+    url: https://github.com/laplace825/laplace825.github.io/tree/main/content/
 
 
   # 设置文本的对齐方式
@@ -551,7 +552,7 @@ params:
   textAlign:
     # 可选值： start | end | left | right | center | justify | justify-all | match-parent
     # Available values: start | end | left | right | center | justify | justify-all | match-parent
-    desktop: justify
+    desktop: justify-all
     mobile: justify
 
   # 在手机端显示减少填充和边距
@@ -936,7 +937,7 @@ params:
     # 更多信息请参考：https://invite.51.la/1NUfGTS1?target=V6
     # 51La Analytics
     # See: https://invite.51.la/1NUfGTS1?target=V6 
-    laId: "3HTyuds4Bm5FaDq4"
+    # laId: "3HTyuds4Bm5FaDq4"
     # 百度统计
     # Baidu Analytics
     #baidu: #<anaytics_id>
@@ -946,9 +947,9 @@ params:
     # 不蒜子统计
     # Show Views / Visitors of the website / page with busuanzi.
     # For more information: http://ibruce.info/2015/04/04/busuanzi/
-    # busuanzi:
-    #  visitorsIcon: fa fa-user
-    #  viewsIcon: fa fa-eye
+    busuanzi:
+     visitorsIcon: fa fa-user
+     viewsIcon: fa fa-eye
 
   # ---------------------------------------------------------------
   # 内容搜索服务
@@ -1052,7 +1053,7 @@ params:
 
   # Mermaid tag
   mermaid:
-    enable: false
+    enable: true
     # Available themes: default | dark | forest | neutral
     theme:
       light: default

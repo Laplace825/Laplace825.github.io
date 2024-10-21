@@ -889,6 +889,11 @@ kbd {
   }
 }
 
+.mermaid {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
 .main .note {
   border-radius: 3px;
   margin-bottom: 20px;
@@ -2666,7 +2671,7 @@ header.header {
 
 @media (min-width: 992px) {
   .post-body {
-    text-align: justify;
+    text-align: justify-all;
   }
 }
 
@@ -2783,6 +2788,25 @@ header.header {
   font-weight: normal;
   margin: initial;
   overflow-wrap: break-word;
+}
+
+.posts-expand .post-title .post-edit-link {
+  border-bottom: 0;
+  color: #bbb;
+  float: right;
+  font-size: 1.25em;
+  margin-left: -1.2em;
+  transition: color 0.2s ease-in;
+}
+
+@media (max-width: 567px) {
+  .posts-expand .post-title .post-edit-link {
+    margin-left: initial;
+  }
+}
+
+.posts-expand .post-title .post-edit-link:hover {
+  color: #fc6423;
 }
 
 .posts-expand .post-title-link {
@@ -3054,6 +3078,11 @@ header.header {
 
 .post-reward .post-reward-item span {
   display: block;
+}
+
+.post-reward .post-reward-item:hover span {
+  animation: next-roll .1s infinite linear;
+  pointer-events: none;
 }
 
 .post-reward img {
