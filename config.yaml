@@ -352,7 +352,7 @@ params:
     title: 友情链接
     # 可选值： block | inline
     # Available values: block | inline
-    layout: inline
+    layout: block
 
   # 友情链接地址
   # 用法： `Key: 显示名称 || 链接地址`
