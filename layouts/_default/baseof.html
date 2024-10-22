@@ -43,6 +43,14 @@
   </footer>
 
   {{ partial "scripts.html" . }}
+  <!-- 引入 js/net-animation.js -->
+  {{ $runAnim := resources.Get "js/net-animation.js" }}
+  <script src="{{ $runAnim.RelPermalink }}"></script>
+  <script>
+    document.documentElement.getAttribute('data-theme') === 'dark' ?
+      runNetAnimation("255,255,255") :
+      runNetAnimation("0,0,0"); 
+  </script>
 </body>
 
 </html>

@@ -53,7 +53,7 @@ markup:
     lineAnchors: ""
     lineNoStart: 1
     lineNos: false
-    lineNumbersInTable: false
+    lineNumbersInTable: true
     noClasses: true
     noHl: false
     style: onedark

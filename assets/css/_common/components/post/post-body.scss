@@ -1,5 +1,6 @@
 .post-body {
   font-family: $font-family-posts;
+  font-size: 20px;
   @include word-wrap();
 
   @include desktop-large() {

@@ -55,6 +55,7 @@ NexT.utils = {
     buttons.querySelector('div#toggle-theme').addEventListener('click', () => {
       const cur_theme = document.documentElement.getAttribute('data-theme');
       window.theme.toggle(cur_theme === 'dark' ? 'light' : 'dark');
+      window.runNetAnimation(cur_theme === 'dark' ? "0,0,0" : "255,255,255");
     });
   },
 
@@ -211,7 +212,6 @@ NexT.utils = {
   },
 
   checkDOMExist: function (selector) {
-    console.log(selector)
     return document.querySelector(selector) != null;
   },
 

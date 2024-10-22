@@ -35,8 +35,8 @@ $transition-ease-out : .2s ease-out;
 // Settings for some of the most global styles.
 // --------------------------------------------------
 // Global text color on <body>
-$text-color                   : $black-light;
-$text-color-dark              : $grey-light;
+$text-color                   : #12183A;
+$text-color-dark              : #ffffff;
 
 // Global link color.
 $link-color                   : $black-light;
@@ -75,23 +75,33 @@ $menu-item-bg-color-dark      : $black-light;
 $theme-color                  : $theme_color_light;
 $theme-color-dark             : $theme_color_dark;
 
+
+// Font families.
+$font-family-chinese      : 'PingFang SC', 'Microsoft YaHei';
+$font-family-english      : -apple-system, BlinkMacSystemFont, Lora;
+
+$font-family-base         :  $font-family-english, $font-family-chinese;
+
+$custom-fonts-for-all: (
+  'title':  'Lora, "PingFang SC"',
+  'headings': 'Lora, "PingFang SC"',
+  'posts': '"PingFang SC"',
+  'codes': 'jetbrains mono'
+);
+
 // Typography
 // Font, line-height, and elements colors.
 // --------------------------------------------------
 @function get-font-family($config) {
   //TODO find the way daymatic variable
-  $custom-family: $config;
+  $custom-family: map-get($custom-fonts-for-all, $config);
   //$custom-family : hexo-config('font.' + $config + '.family');
   @return if(type-of($custom-family) == string, unquote($custom-family), null);
 }
 
-// Font families.
-$font-family-chinese      : 'PingFang SC', 'Microsoft YaHei';
-
-$font-family-base         : $font-family-chinese, sans-serif;
-@if get-font-family('global') {
-  $font-family-base       : join(get-font-family('global'), $font-family-base);
-}
+/* @if get-font-family('global') { */
+/*   $font-family-base       : join(get-font-family('global'), $font-family-base); */
+/* } */
 
 $font-family-logo         : $font-family-base;
 @if get-font-family('title') {
@@ -105,10 +115,10 @@ $font-family-headings     : $font-family-base;
 
 $font-family-posts        : $font-family-base;
 @if get-font-family('posts') {
-  $font-family-posts      : join(get-font-family('posts'), $font-family-posts);
+  $font-family-posts      : get-font-family('posts');
 }
 
-$font-family-monospace    : consolas, Menlo, monospace, $font-family-chinese;
+$font-family-monospace    : consolas, Menlo, monospace;
 @if get-font-family('codes') {
   $font-family-monospace  : join(get-font-family('codes'), $font-family-monospace);
 }
