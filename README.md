@@ -28,4 +28,4 @@ Welcome to All friends who want to add their site to my blogroll! Just send me a
   + Add a feature to import Bilibili video with `{{< bilibili BVxxxxx>}}` in .md file
   + Add a mouse click firework in `/layouts/partials/custom/script.html`
 
-+ [ ] I add a net animation in `/assets/js/net-animation.js` and immediately called in `/layouts/partials/baseof.html`, also adjust the animation color according to the theme in `/assets/js/utils.js: registerToolButtons`
++ [ ] I add a net animation in `/assets/js/net-animation.js` and immediately called in `/layouts/_default/baseof.html`, also adjust the animation color according to the theme in `/assets/js/utils.js: registerToolButtons`

@@ -1,4 +1,4 @@
 .obsidian
 .obsidian-template/
-themes/*
-public/*
+themes/
+public/
