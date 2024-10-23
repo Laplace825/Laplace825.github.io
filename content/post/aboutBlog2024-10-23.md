@@ -6,7 +6,6 @@ tags:
   - Blog
 categories: 
 - Blog
-draft: true
 ---
 
 这篇博客主要记录了博客最近的一些改动和变化。包括最近的网站统计，以及一些额外添加的功能。
