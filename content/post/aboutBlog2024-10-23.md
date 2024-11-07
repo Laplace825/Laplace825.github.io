@@ -1,13 +1,12 @@
 ---
 title: "关于博客最近的改动和变化(2024-10-23)"
-date: 2024-10-23T22:02:15+08:00
-description: "The changes and updates of the blog"
 author: "Laplace"
+description: "The changes and updates of the blog"
+date: 2024-10-23
 tags: 
   - Blog
 categories: 
 - Blog
-draft: true
 ---
 
 这篇博客主要记录了博客最近的一些改动和变化。包括最近的网站统计，以及一些额外添加的功能。
@@ -335,6 +334,7 @@ buttons.querySelector('div#toggle-theme').addEventListener('click', () => {
       window.runNetAnimation(cur_theme === 'dark' ? "0,0,0" : "255,255,255");
     });
 ```
+
 ## 其他改动
 
 ### 字体

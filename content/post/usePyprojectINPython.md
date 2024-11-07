@@ -42,6 +42,8 @@ It allows you to declare the libraries your project depends on and it will manag
 
 Different from `pip`, it will create a virtual environment for you and install the packages in the virtual environment.
 
+***Actually, `Poetry` is used to manage a Python based project with `pyproject.toml`, and that's how I use `Poetry`.***
+
 ```bash
 ❯ pipx install poetry
 ```
