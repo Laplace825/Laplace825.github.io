@@ -675,6 +675,7 @@ td {
 kbd, p > code, li > code {
   background: var(--highlight-background);
   color: var(--highlight-foreground);
+  font-size: 16px;
 }
 
 pre {
@@ -2663,7 +2664,7 @@ header.header {
 
 .post-body {
   font-family: "PingFang SC";
-  font-size: 20px;
+  font-size: 18px;
   overflow-wrap: break-word;
 }
 
