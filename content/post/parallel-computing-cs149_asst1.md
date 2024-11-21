@@ -55,20 +55,17 @@ Result:
 
 ```cpp
 void workerThreadStart(WorkerArgs * const args) {
-
     // NOTE:  in a program that uses two threads, thread 0 could compute the top
     // half of the image and thread 1 could compute the bottom half.
     printf("[thread %d] working\n", args->threadId);
-    if (!args->threadId){
-
-    mandelbrotSerial(args->x0, args->y0, args->x1, args->y1,
+    if (!args->threadId) {
+        mandelbrotSerial(args->x0, args->y0, args->x1, args->y1,
                      args->width,  args->height, 
                      0,  args->height / 2,
                      args->maxIterations, args->output);
     }
-    else{
-
-    mandelbrotSerial(args->x0, args->y0, args->x1, args->y1,
+    else {
+        mandelbrotSerial(args->x0, args->y0, args->x1, args->y1,
                      args->width,  args->height, 
                      args->height /2 ,  args->height / 2,
                      args->maxIterations, args->output);

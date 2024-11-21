@@ -690,6 +690,7 @@ p > code, li > code {
 
 pre, code {
   font-family: jetbrains mono, consolas, Menlo, monospace;
+  font-size: 16px;
 }
 
 kbd {
