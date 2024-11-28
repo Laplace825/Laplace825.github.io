@@ -421,27 +421,3 @@ Each sample counts as 0.01 seconds.
 
 ### Part 3 Multi-Thread
 
-Because we just simulate 3 clusters, We can compute each clusters parallelly. Just change these which has `args->begin` and `args->end`, we distribute these functions
-to a thread.
-
-```cpp
-void computeAssignmentsSingle(WorkerArgs *const args, int K) {
-  ...
-    // Assign datapoints to closest centroids
-    for (int m = 0; m < args->M; m++) {
-        double d = distAVX2(&args->data[m * args->N],
-          &args->clusterCentroids[K * args->N], args->N);
-        if (d < minDist[m]) {
-            minDist[m]                  = d;
-            args->clusterAssignments[m] = K;
-        }
-    }
-  ...
-}
-```
-
-And we get a big improvement.
-
-```
-[Total Time]: 367.562 ms
-```
