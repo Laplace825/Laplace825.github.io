@@ -1,7 +1,7 @@
 ---
-title: "Parallel Computing CS149 ASST1 note"
+title: "Parallel Computing CS149 ASST 1 note"
 author: "Laplace"
-description: "A note record my CS149 ASST1"
+description: "A note record my CS149 ASST 1"
 date: 2024-11-20T20:30:32+08:00
 tags:
   - Parallel-Computing
@@ -17,7 +17,7 @@ but I truly recommand you finish it by u self.
 
 <!--more-->
 
-## ASST1 ( runned by Apple M3 )
+## Program 1 ( runned by Apple M3 )
 
 ### important things
 
@@ -92,7 +92,7 @@ less thread.
 
 e.g. `3-Thread` gets 1.58x speedup at the same time `2-Thread` gets 1.94x.
 
-## ASST2 ( runned by Ryzen7 6800H )
+## Program 2 ( runned by Ryzen7 6800H )
 
 *I must say this is very an interesting assignment. As we just in the lecture for
 maybe 2 classes, the SIMD instructions we are not easy to get, but the CS149intrin helps
@@ -150,7 +150,7 @@ So if I get `1 2 2 1` to get sum, just do this:
     return result[0];
 ```
 
-## ASST3 (Ryzen7 6800H)
+## Program 3 (Ryzen7 6800H)
 
 ### Part 1
 
@@ -216,3 +216,232 @@ But 32-tasks is really faster than 16-tasks. In view-2 version, 800-task seems b
 If we analyse the profiling using `perf stat`, we can tell that in 'thread version' for `prog1_mandelbrot_thread`,
 the cpu utilization is heigher. But the ispc version using `task` is faster and exceeds the sequential code over
 32 times. BTW, the 32-task has lower cpu utilization then 'thread version'.
+
+*After I see the lecture 4, I get it. I only have 16-wide task per instructions, but giving 32-task makes the compiler
+issue two instructions which run continuously and that is more conducive to pipeline computing.*
+
+## Program 4 (Ryzen7 6800H)
+
+### Part 1 Build and Run
+
+we can see the speedup there.
+
+| multi-task ispc |   ispc   |
+| :-------------: | :------: |
+| 55.24x |  4.97x  |
+
+### Part 2 Best or Worst Case
+
+#### Best Case
+
+Since all the values are the same, some every lane can do the same SIMD instruction while
+the sequential version must compute with maxIterations.
+
+| multi-task ispc |   ispc   |
+| :-------------: | :------: |
+| 81.87x |  6.77x  |
+
+#### Worst Case
+
+The SIMD used is `avx2` which supports '8-wide' SIMD instructions. So we should
+break the 8-wide can't be implement with useful SIMD instructions while let sequential
+version to be fast. Obviously, the fastest case for `sqrt` is setting all the value to `1`
+that needed lest iteration. So we can assign the `value` every 8 rounds to be slowest for
+compute, and the rest to assign as fast as the sequential can do.
+
+I choose from '2.5f ~ 2.8f' and finally I choose *2.68f*. Because we shouldn't give a value to
+near to 3, or the sequential part's job will be more. ***Our goal is just let SIMD is not very helpful
+, we should break Coherent.*** So in that case, we can choose `0.1f` also.
+
+| multi-task ispc |   ispc   |
+| :-------------: | :------: |
+| 6.98x |  0.94x  |
+
+```cpp
+if ( i % 8 == 0 ) {
+    values[i] = 2.68f;
+} else {
+    values[i] = 1.f; 
+}
+
+// if ( i % 8 == 0 ) {
+//     values[i] = 0.101f;
+// } else {
+//     values[i] = 1.f; 
+// }
+```
+
+### Part 3 AVX2 version
+
+Refer [intel intrinsics guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/).
+The AVX2 Version can be found in my repo.
+
+---
+
+***Now we all runned by Ryzen7 6800H.***
+
+---
+
+## Program 5
+
+### Part 1 speedup
+
+```
+[saxpy serial]:		[29.205] ms	[10.204] GB/s	[1.370] GFLOPS
+[saxpy ispc]:		[26.056] ms	[11.438] GB/s	[1.535] GFLOPS
+[saxpy task ispc]:	[21.102] ms	[14.123] GB/s	[1.896] GFLOPS
+				(1.12x speedup from ISPC to serial)
+				(1.38x speedup from task ISPC to serial)
+				(1.23x speedup from use of tasks to just ISPC)
+```
+
+A problem happens here, the `extra credit` hints to think about cpu caches work and memory bandwidth.
+I dont know the `myth machine`'s situation. In order to think about what happened, I try to test with just
+`ispc` or with just `task`.
+
+I find that there is many page-faults in just 'ispc', and lots of `frontend cycles idle`.
+All these make the program slower.
+
+The multi-task version uses CPU up to 345.2%. That exceeds my past program much more (in the past almost just 100% maybe more a little).
+But the speedup is still not good.
+
+```
+// ispc
+Performance counter stats for './saxpy -i':
+
+            129.53 msec task-clock:u                     #    0.992 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             2,754      page-faults:u                    #   21.262 K/sec                     
+       254,357,756      cycles:u                         #    1.964 GHz                       
+        47,137,032      stalled-cycles-frontend:u        #   18.53% frontend cycles idle      
+       680,745,469      instructions:u                   #    2.68  insn per cycle            
+                                                  #    0.07  stalled cycles per insn   
+       134,833,625      branches:u                       #    1.041 G/sec                     
+            19,039      branch-misses:u                  #    0.01% of all branches           
+
+// task-ispc
+Performance counter stats for './saxpy -t':
+
+            435.02 msec task-clock:u                     #    3.452 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             2,791      page-faults:u                    #    6.416 K/sec                     
+     1,139,191,206      cycles:u                         #    2.619 GHz                       
+         2,627,409      stalled-cycles-frontend:u        #    0.23% frontend cycles idle      
+       695,864,736      instructions:u                   #    0.61  insn per cycle            
+                                                  #    0.00  stalled cycles per insn   
+       134,857,706      branches:u                       #  310.000 M/sec                     
+            22,567      branch-misses:u                  #    0.02% of all branches           
+```
+
+So I still analyse the memory miss (actually L1-cache miss). I also analysed `sqrt` program, and thus we know there meets
+memory boundary.
+
+```
+// sqrt
+39,405      l1_dtlb_misses:u                 #    5.129 K/sec
+
+// task-ispc
+25,874      l1_dtlb_misses:u                 #   60.855 K/sec
+
+// ispc
+19,639      l1_dtlb_misses:u                 #  151.536 K/sec
+```
+
+### Part 2 try to improve
+
+I just have an idea to pre-load some data to the cache. If our 'task 1' is doing '1 ~ 1 + span' work, we can 
+load '2 ~ 2 + span' data to cache simultaneously. But I don't know how to achieve it😭.
+
+## Program 6
+
+*Case I can't access the myth machine, I generate data.*
+
+```
+Running K-means with: M=1000000, N=100, K=3, epsilon=0.100000
+[Total Time]: 4297.427 ms
+```
+
+### Part 1 profiling
+
+Based on profiling, we can see that the `computeAssignments` may be the boundary. And `dist` was called
+the maxminum times. We can try to improve the performance of function `dist`,`computeAssignments`,`computeCentroids`,
+`computeCost`(initData isn't our care)
+
+```
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 59.48      4.62     4.62       24     0.19     0.19  computeAssignments(WorkerArgs*)
+ 15.19      5.80     1.18       24     0.05     0.05  computeCost(WorkerArgs*)
+ 14.68      6.94     1.14        1     1.14     1.14  initData(double*, int, int)
+  8.75      7.62     0.68       24     0.03     0.03  computeCentroids(WorkerArgs*)
+  1.67      7.75     0.13  3000000     0.00     0.00  dist(double*, double*, int)
+  0.26      7.77     0.02        2     0.01     0.01  logToFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double, double*, int*, double*, int, int, int)
+  0.00      7.77     0.00        4     0.00     0.00  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&)
+  0.00      7.77     0.00        2     0.00     0.00  CycleTimer::secondsPerTick()
+  0.00      7.77     0.00        1     0.00     6.48  kMeansThread(double*, double*, int*, int, int, int, double)
+  0.00      7.77     0.00        1     0.00     0.00  initCentroids(double*, int, int)
+  0.00      7.77     0.00        1     0.00     0.00  readData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double**, double**, int**, int*, int*, int*, double*)
+  0.00      7.77     0.00        1     0.00     0.00  writeData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double*, double*, int*, int*, int*, int*, double*)
+```
+
+### Part 2 SIMD dist
+
+A simple and quick try, I make a SIMD dist using AVX2. Actually it seems reducing the time waste about
+1 seconds.
+
+```
+[Total Time]: 3024.816 ms
+```
+
+But finally it seems the SIMD dist( `distAVX2` ) is the boundary. But this is because we have so many data to compute (as the function is called 99000000 times),
+and time consumed per call is near to 0s.
+
+```
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 63.47      3.45     3.45 99000000     0.00     0.00  distAVX2(double*, double*, int)
+ 17.87      4.42     0.97        1     0.97     0.97  initData(double*, int, int)
+ 12.71      5.11     0.69       24     0.03     0.03  computeCentroids(WorkerArgs*)
+  4.61      5.36     0.25       24     0.01     0.11  computeAssignments(WorkerArgs*)
+  0.74      5.40     0.04       24     0.00     0.04  computeCost(WorkerArgs*)
+  0.37      5.42     0.02        2     0.01     0.01  logToFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double, double*, int*, double*, int, int, int)
+  0.18      5.43     0.01                             main
+  0.09      5.43     0.01                             distNoSqrt(double*, double*, int)
+  0.00      5.43     0.00        4     0.00     0.00  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&)
+  0.00      5.43     0.00        2     0.00     0.00  CycleTimer::secondsPerTick()
+  0.00      5.43     0.00        1     0.00     4.32  kMeansThread(double*, double*, int*, int, int, int, double)
+  0.00      5.43     0.00        1     0.00     0.00  initCentroids(double*, int, int)
+  0.00      5.43     0.00        1     0.00     0.00  readData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double**, double**, int**, int*, int*, int*, double*)
+  0.00      5.43     0.00        1     0.00     0.00  writeData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double*, double*, int*, int*, int*, int*, double*)
+```
+
+### Part 3 Multi-Thread
+
+Because we just simulate 3 clusters, We can compute each clusters parallelly. Just change these which has `args->begin` and `args->end`, we distribute these functions
+to a thread.
+
+```cpp
+void computeAssignmentsSingle(WorkerArgs *const args, int K) {
+  ...
+    // Assign datapoints to closest centroids
+    for (int m = 0; m < args->M; m++) {
+        double d = distAVX2(&args->data[m * args->N],
+          &args->clusterCentroids[K * args->N], args->N);
+        if (d < minDist[m]) {
+            minDist[m]                  = d;
+            args->clusterAssignments[m] = K;
+        }
+    }
+  ...
+}
+```
+
+And we get a big improvement.
+
+```
+[Total Time]: 367.562 ms
+```
