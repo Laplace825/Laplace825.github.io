@@ -421,3 +421,35 @@ Each sample counts as 0.01 seconds.
 
 ### Part 3 Multi-Thread
 
+just compute the `computeAssignments` with 32-threads.
+
+```
+[Total Time]: 2023.298 ms # With SIMD dist
+[Total Time]: 3529.115 ms # Without SIMD dist
+```
+
+this is profiling.
+
+```
+# With SIMD dist
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 56.69      2.76     2.76 29357400     0.00     0.00  distAVX2(double*, double*, int)
+ 20.95      3.78     1.02        1     1.02     1.02  initData(double*, int, int)
+ 17.46      4.63     0.85       24     0.04     0.04  computeCentroids(WorkerArgs*)
+  3.08      4.78     0.15                             computeAssignmentsSingle(WorkerArgs*, double*, int, int)
+  0.82      4.82     0.04       24     0.00     0.00  computeAssignmentsMutiThread(WorkerArgs*)
+  0.62      4.85     0.03       24     0.00     0.10  computeCost(WorkerArgs*)
+  0.41      4.87     0.02                             _init
+  0.00      4.87     0.00        4     0.00     0.00  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&)
+  0.00      4.87     0.00        2     0.00     0.00  logToFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double, double*, int*, double*, int, int, int)
+  0.00      4.87     0.00        2     0.00     0.00  CycleTimer::secondsPerTick()
+  0.00      4.87     0.00        1     0.00     3.18  kMeansThread(double*, double*, int*, int, int, int, double)
+  0.00      4.87     0.00        1     0.00     0.00  initCentroids(double*, int, int)
+  0.00      4.87     0.00        1     0.00     0.00  readData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double**, double**, int**, int*, int*, int*, double*)
+  0.00      4.87     0.00        1     0.00     0.00  writeData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double*, double*, int*, int*, int*, int*, double*)
+```
+
+It seems magic happens. The call times of `distAVX2` is reduced significantly. ( But Actually I dont know why 🥹) And the iteration turns
+is the same, 24-iteration.
