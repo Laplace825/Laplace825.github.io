@@ -12,8 +12,6 @@ categories:
 
 This series will cover my assignment solution and some notes to *Standford CS149 lecture*.
 And I truly recommand anyone who wants to learn *Parallel-Computing* to follow this lecture.
-This is my github repo which contains source code [laplace/cs149-asst](https://github.com/Laplace825/cs149-asst.git),
-but I truly recommand you finish it by u self.
 
 <!--more-->
 
@@ -33,13 +31,13 @@ Result as the Serial method.
 + add code to workerThreadStart function to accomplish this task.  
 + just change the `fn workerThreadStart`
 
-### done
-
-#### notice
+### notice
 
 Because the height is 1200 (maybe we can change), so if we divide the picture partly
 by height div number of threads and can't get a integer result, there will be wrong
 error.
+
+### done
 
 #### 2 thread
 
@@ -273,8 +271,10 @@ if ( i % 8 == 0 ) {
 
 ### Part 3 AVX2 version
 
-Refer [intel intrinsics guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/).
-The AVX2 Version can be found in my repo.
+Refer to [intel intrinsics guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/).
+AVX2 version is near to ispc version, but a little faster. In the worst case, it gets 1.2x speedup while ispc gets 0.9x.
+And in the good case, avx2 version can gets faster than just ispc.
+
 
 ---
 
@@ -389,7 +389,7 @@ Each sample counts as 0.01 seconds.
 
 ### Part 2 SIMD dist
 
-A simple and quick try, I make a SIMD dist using AVX2. Actually it seems reducing the time waste about
+A simple and quick try, I make a SIMD dist using AVX2. Actually it seems reducing the time consumed about
 1 seconds.
 
 ```
@@ -451,5 +451,5 @@ Each sample counts as 0.01 seconds.
   0.00      4.87     0.00        1     0.00     0.00  writeData(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, double*, double*, int*, int*, int*, int*, double*)
 ```
 
-It seems magic happens. The call times of `distAVX2` is reduced significantly. ( But Actually I dont know why 🥹) And the iteration turns
+It seems magic happens. Times of calling `distAVX2` is reduced significantly. ( But Actually I dont know why 🥹) And the iteration turns
 is the same, 24-iteration.
