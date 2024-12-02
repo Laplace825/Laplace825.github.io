@@ -31,7 +31,7 @@ because `pipx` will automatically install the python packages separately.
 Actually, if you don't want `pipx`, you can use `pip` to install `poetry` directly.
 
 ```bash
-❯ pip install pipx
+pip install pipx
 ```
 
 ## install poetry
@@ -45,19 +45,31 @@ Different from `pip`, it will create a virtual environment for you and install t
 ***Actually, `Poetry` is used to manage a Python based project with `pyproject.toml`, and that's how I use `Poetry`.***
 
 ```bash
-❯ pipx install poetry
+pipx install poetry
 ```
 
 Now you can use `pipx list` to check if `poetry` is installed.
 
 ```bash
-❯ pipx list
+pipx list
+
 # output like this
 venvs are in /home/lap/.local/share/pipx/venvs
 apps are exposed on your $PATH at /home/lap/.local/bin
 manual pages are exposed at /home/lap/.local/share/man
    package poetry 1.8.4, installed using Python 3.12.7
     - poetry
+```
+
+## using virtual env
+
+poetry can build an virtual env using the `pyproject.toml`.
+
+```bash
+poetry env use python
+
+# activate the poetry environment
+poetry shell
 ```
 
 ## Install pytorch with poetry
@@ -67,7 +79,7 @@ Because the `pytorch` just supplies with `cuda` `pip`, but we want to install th
 using poetry the add a source to the pytorch wheel files with specific cuda version.
 
 ```bash
-❯ poetry source add --priority=supplemental pytorch_cu124 https://download.pytorch.org/whl/cu124
+poetry source add --priority=supplemental pytorch_cu124 https://download.pytorch.org/whl/cu124
 ```
 
 Then add the pytorch package with the following command.
@@ -76,17 +88,14 @@ This is a large package so it will take some time to install.
 (Actually maybe 3.5GB because I using mobile data network to download accidentally 😵)
 
 ```bash
-❯ poetry add --source pytorch_cu124 torch torchvision torchaudio
+poetry add --source pytorch_cu124 torch torchvision torchaudio
 ```
 
 ## try it
 
 ```bash
-# activate the poetry environment
-❯ poetry shell
-
 # try it  
-❯ python -c "import torch; print(torch.__version__)"
+python -c "import torch; print(torch.__version__)"
 # output like this
 2.5.0+cu124
 ```
