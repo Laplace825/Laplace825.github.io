@@ -55,10 +55,10 @@ music: true
 貌似`autoplay`并未生效。
 
 ```markdown
-{{</* music theme="#2980b9" server="netease" type="song" id="2097486090" mini="true" autoplay="true" */>}}
+{{</* music server="netease" type="song" id="2097486090" mini="true" autoplay="true" */>}}
 ```
 
-{{< music theme="#2980b9" server="netease" type="song" id="2097486090" mini="true" >}}
+{{< music server="netease" type="song" id="2097486090" mini="true" autoplay="true" >}}
 
 ### 列表播放
 
