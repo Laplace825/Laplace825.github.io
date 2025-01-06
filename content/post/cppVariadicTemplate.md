@@ -5,8 +5,8 @@ author: "Laplace"
 tags:
   - C++
 categories:
-  - C++
-  - C++ template meta programming
+- C++
+- C++ Template Meta Programming
 date: 2024-06-16
 ---
 这章属于是重点了，而且感觉还挺难掌握各种用法的，不过也是让我感觉魔法的开始✨。

@@ -8,6 +8,7 @@ lastmod: 2024-02-13
 
 tags: 
   - C++
+  - CMake
 categories:
 - C++
 ---

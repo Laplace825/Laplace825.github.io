@@ -5,8 +5,8 @@ author: "Laplace"
 tags:
   - C++
 categories:
-  - C++
-  - C++ template meta programming
+- C++
+- C++ Template Meta Programming
 date: 2024-06-15
 ---
 非类型模板参数其实说来也简单，也就是在`template`中将`typename`换成具体的类型。但是还是有诸多限制和使用方式的。👍

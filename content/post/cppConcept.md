@@ -5,8 +5,8 @@ author: "Laplace"
 tags:
   - C++
 categories:
-  - C++
-  - C++ template meta programming
+- C++
+- C++ Template Meta Programming
 date: 2024-08-27T07:55:20+08:00
 ---
 

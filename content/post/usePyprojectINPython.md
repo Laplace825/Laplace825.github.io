@@ -8,7 +8,6 @@ tags:
   - Tools
 categories:
   - Python
-  - Tools
 ---
 
 In this post, I will show you how to use `pyproject` to install `pytorch` with specific `cuda` version using `poetry` and `pipx`.
