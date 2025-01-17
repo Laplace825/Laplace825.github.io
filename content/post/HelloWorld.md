@@ -7,6 +7,7 @@ date: 2023-10-01T20:12:52+08:00
 lastmod: 2023-10-01T20:12:52+08:00
 weight: 1
 
+music: true
 ---
 
 😄
@@ -15,6 +16,8 @@ weight: 1
 ***<font face="Times New Roman">Hello, friend! Here is a simple self-introduction</font>***
 💬
 <!--more-->
+
+{{< music server="netease" type="song" id="2633269611" autoplay="true" >}}
 
 <blockquote align="center">
 我是正在一名学习计算机专业的学生<br>

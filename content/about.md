@@ -12,7 +12,7 @@ url: about.html
 music: true
 ---
 
-{{< music theme="#2980b9" server="netease" type="song" id="2633269611" autoplay="true" >}}
+{{< music server="netease" type="song" id="2633269611" autoplay="true" >}}
 
 <blockquote align="center">
 我是正在一名学习计算机专业的学生<br>
