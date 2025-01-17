@@ -1,11 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# ---------------------------------------------------------------#
+# 
+# This script is used to deploy the site to the main branch.
+#
+## Will update from remote main branch and then push
+# 
+# ---------------------------------------------------------------#
+
+
 LANG=en_US.UTF-8
-# 用于部署博客的脚本
+
+gitupdate() {
+  git stash
+  git pull -r
+  git stash apply
+  git submodule update --remote --recursive
+}
+
+gitcommit() {
+  git add .
+  git commit -m "$1 rebuilding site $(date)"
+  git push
+}
+
+gitupdate
+
 hugo --cleanDestinationDir -F -D -E
-# 文件夹的内容推送到远程仓库
-git add .
-git commit -m "$1 rebuilding site $(date)"
-git submodule update --remote --recursive
-# 拉取远程仓库的更新
-git pull -r
-git push 
+
+gitcommit "$1"
