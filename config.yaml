@@ -184,7 +184,7 @@ params:
   author: Laplace
   subtitle: When the SUN Rises in the EAST
   description: 当太阳从东方升起
-  keywords: 博客,Hugo,NexT,IT,CS
+  keywords: 博客,Hugo,IT,Computer Science,CPP
 
   # 不同尺寸站点图标
   # Different size of favicon
@@ -359,7 +359,7 @@ params:
   # Links of your friends
   # Usage: `Key: name || permalink`
   links: 
-    link0: Qlexander || https://grassblock2016.github.io
+    link0: qlexander || https://qlexander.cn
     # link0: Hugo-NexT || https://gitee.com/hugo-next/hugo-theme-next
 
   # 文章目录显示
