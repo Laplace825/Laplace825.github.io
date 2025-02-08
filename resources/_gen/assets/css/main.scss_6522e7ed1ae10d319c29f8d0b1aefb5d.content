@@ -402,7 +402,7 @@ body {
   box-sizing: border-box;
   color: var(--text-color);
   font-family: global, "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 1em;
+  font-size: 0.9em;
   line-height: 2;
   min-height: 100%;
   position: relative;
@@ -677,7 +677,7 @@ td {
 kbd, p > code, li > code {
   background: var(--highlight-background);
   color: var(--highlight-foreground);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 pre {
@@ -686,12 +686,13 @@ pre {
 }
 
 p > code, li > code {
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 3px 6px;
 }
 
 pre, code {
   font-family: codes, "FiraCode Nerd Font Mono", "JetBrains Mono", consolas, Menlo, monospace, "PingFang SC", "Microsoft YaHei";
+  font-size: 14px;
 }
 
 kbd {

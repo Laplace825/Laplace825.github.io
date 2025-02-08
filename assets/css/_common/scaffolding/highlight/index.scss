@@ -3,7 +3,7 @@
 %code-inline {
   background: var(--highlight-background);
   color: var(--highlight-foreground);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 pre {
@@ -13,12 +13,13 @@ pre {
 
 p > code, li > code {
   @extend %code-inline;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 3px 6px;
 }
 
 pre, code {
   font-family: $code-font-family;
+  font-size: 14px;
 }
 
 
