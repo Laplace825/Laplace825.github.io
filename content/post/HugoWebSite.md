@@ -1,12 +1,12 @@
 ---
-author: "Laplace" 
+author: "Laplace"
 title: "Windows11关于如何在github.io上部署个人博客Hugo"
 date: 2023-10-05
 lastmod: 2023-10-05
 description: "setup your blog with github.io and Hugo"
-tags: 
+tags:
   - Blog
-categories: 
+categories:
 - Blog
 ---
 
@@ -92,7 +92,7 @@ $ git submodule add https://github.com/nanxiaobei/hugo-paper themes/paper
 
 ```cpp
 $ hugo server
-# 可能有些主题使用到 hugo server -D，建议读者参考安装主题的说明文档 
+# 可能有些主题使用到 hugo server -D，建议读者参考安装主题的说明文档
 ```
 
 8. 从返回到信息可以看到本地网址`http://localhost:<port>/` 粘贴到浏览器就可以看到网页了。
@@ -116,7 +116,7 @@ $ git commit -m "msg"
 # -m 后面的信息可以随意填写，主要是标记此次更新的内容
 ```
 
-4. 把分支改成 `main` 
+4. 把分支改成 `main`
 
 ```cpp
 $ git branch -M main
@@ -148,4 +148,5 @@ $ git push -u origin main
 $ git pull --rebase origin main
 # main也可以是master,取决于本地
 ```
+
 然后再使用`$ git push -u origin main` 即可。
