@@ -12,9 +12,9 @@ const runNetAnimation = function (the_color) {
         return {
             l: o,
             z: n(i, "zIndex", 2),
-            o: n(i, "opacity", 0.5),
+            o: n(i, "opacity", 0.3),
             c: n(i, "color", the_color),
-            n: n(i, "count", 120),
+            n: n(i, "count", 70),
         };
     }
     function o() {

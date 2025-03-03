@@ -29,7 +29,7 @@ hasCJKLanguage: true
 # 每页显示文章数量
 # Display items per page
 pagination:
-  pagerSize: 10
+  pagerSize: 5 
 # 开启支持表情符号
 # Enable Emoji support
 enableEmoji: true
@@ -56,8 +56,8 @@ markup:
     lineNumbersInTable: true
     noClasses: true
     noHl: false
-    style: onedark
-    tabWidth: 2
+    style: catppuccin-mocha
+    tabWidth: 4
   tableOfContents:
     # 开始/结束标题级别：1-6 (建议从2开始)
     # Heading title level of start or end: 1-6
@@ -190,9 +190,9 @@ params:
   # Different size of favicon
   favicon:
     icon: /imgs/icons/favicon.ico
-    small: /imgs/icons/favicon_16x16_next.png
-    medium: /imgs/icons/favicon_32_32_next.png
-    appleTouchIcon: /imgs/icons/apple_touch_icon_next.png
+    small: /imgs/icons/favicon-16x16.png
+    medium: /imgs/icons/favicon-32x32.png
+    appleTouchIcon: /imgs/icons/apple-touch-icon.png
 
   # 自定义 Logo （目前只支持 Mist 页面模式）
   # Custom Logo (Warning: Only support scheme Mist)
