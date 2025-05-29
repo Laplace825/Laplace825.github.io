@@ -10,3 +10,9 @@
       link: https://qlexander.cn
       timeout: 2
       visible: true
+    - name: Ray
+      desc: ENDsoft's Blog
+      avatar: https://r-ay.cn/images/cb254102-aa64-4051-af5f-77a325f14ff7.png
+      link: https://blog.r-ay.cn/
+      timeout: 2
+      visible: true

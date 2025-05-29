@@ -360,6 +360,7 @@ params:
   # Usage: `Key: name || permalink`
   links: 
     link0: qlexander || https://qlexander.cn
+    link1: Ray || https://blog.r-ay.cn/
     # link0: Hugo-NexT || https://gitee.com/hugo-next/hugo-theme-next
 
   # 文章目录显示
