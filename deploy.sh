@@ -15,7 +15,7 @@ gitupdate() {
   git stash
   git pull -r
   git stash apply
-  git submodule update --remote --recursive
+  # git submodule update --remote --recursive
 }
 
 gitcommit() {
