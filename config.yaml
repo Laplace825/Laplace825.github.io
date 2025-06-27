@@ -787,7 +787,9 @@ params:
   # 注意这里全局配置，意味着所有页面都会加载数学公式脚本
   # Math Formulas Render Support, options: mathjax, katex
   # Warning: It's global settings then will load scripts in every page.
-  math: 
+  math:
+    enable: true
+    render: mathjax  
 
   # TODO
   # FancyBox is a tool that offers a nice and elegant way 
@@ -1195,10 +1197,10 @@ params:
   vendors:
     # The CDN provider of NexT internal scripts.
     # Available values: local | cdn
-    internal: local
+    internal: cdn
     # The default CDN provider of third-party plugins.
     # Available values: local | cdnjs | unpkg | jsdelivr | staticfile | bootcdn | 7ed | zstatic | zeyao | custom
-    plugins: local
+    plugins: jsdelivr
     # Custom CDN URL
     # For example:
     # custom_cdn_url: https://cdn.jsdelivr.net/npm/${npm_name}@${version}/${minified}

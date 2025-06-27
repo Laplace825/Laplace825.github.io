@@ -59,17 +59,29 @@
 {{ end }}
 
 {{/* Append math render plugin */}}
-{{ with or .Params.math .Site.Params.math }}
-{{ $math := dict
-  "render" .
-  "js"  (index $.Site.Data.resources.plugins .).js
-}}
+{{ $mathConfig := or .Params.math .Site.Params.math }}
+{{ if $mathConfig }}
+  {{ $render := "" }}
+  {{ if reflect.IsMap $mathConfig }}
+    {{ if and $mathConfig.enable $mathConfig.render }}
+      {{ $render = $mathConfig.render }}
+    {{ end }}
+  {{ else }}
+    {{ $render = $mathConfig }}
+  {{ end }}
+  
+  {{ if $render }}
+    {{ $math := dict
+      "render" $render
+      "js"  (index $.Site.Data.resources.plugins $render).js
+    }}
 
-{{ if eq . "katex" }}
-  {{ $math = merge $math ( dict "css" $.Site.Data.resources.plugins.katex.css ) }}
-{{ end }}
+    {{ if eq $render "katex" }}
+      {{ $math = merge $math ( dict "css" $.Site.Data.resources.plugins.katex.css ) }}
+    {{ end }}
 
-{{ $pageCfg = merge $pageCfg (dict "math" $math) }}
+    {{ $pageCfg = merge $pageCfg (dict "math" $math) }}
+  {{ end }}
 {{ end }}
 
 <script class="next-config" data-name="page" type="application/json">{{ $pageCfg }}</script>
