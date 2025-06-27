@@ -1,5 +1,15 @@
 {{ partialCached "scripts/global.html" . }}
 {{ partial "scripts/plugins.html" . }}
+
+<!-- Welcome Page Script -->
+{{ if .Site.Params.welcome.enable }}
+{{ $welcomeConfigJS := resources.Get "js/welcome-config.js" }}
+{{ $welcomeConfigJS = $welcomeConfigJS | resources.ExecuteAsTemplate "welcome-config.js" . }}
+<script src="{{ $welcomeConfigJS.RelPermalink }}"></script>
+{{ $welcomeJS := resources.Get "js/welcome.js" }}
+<script src="{{ $welcomeJS.RelPermalink }}"></script>
+{{ end }}
+
 <script>
 (function () {
   let balls = [];
@@ -13,7 +23,7 @@
   const colours = ["#F73859", "#14FFEC", "#00E0FF", "#FF99FE", "#FAF15D"];
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  canvas.setAttribute("style", "width: 60%; height: 60%; top: 0; left: 0; z-index: 99999; position: fixed; pointer-events: none;");
+  canvas.setAttribute("style", "width: 60%; height: 60%; top: 0; left: 0; z-index: -1; position: fixed; pointer-events: none; display: none;");
   const pointer = document.createElement("span");
   pointer.classList.add("pointer");
   document.body.appendChild(pointer);
@@ -23,7 +33,53 @@
     updateSize();
     window.addEventListener('resize', updateSize, false);
     loop();
+    
+    // Function to update canvas visibility based on welcome page visibility
+    function updateCanvasVisibility() {
+      const welcomeOverlay = document.getElementById('welcome-overlay');
+      if (welcomeOverlay && !welcomeOverlay.classList.contains('hidden')) {
+        // Welcome page is visible, show canvas
+        canvas.style.display = "block";
+        canvas.style.zIndex = "1000";
+      } else {
+        // Welcome page is hidden or removed, completely hide canvas
+        canvas.style.display = "none";
+        canvas.style.zIndex = "-1";
+      }
+    }
+    
+    // Initial check
+    updateCanvasVisibility();
+    
+    // Set up a MutationObserver to watch for DOM changes
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+          // Check if welcome overlay was removed
+          updateCanvasVisibility();
+        } else if (mutation.type === 'attributes' && mutation.target.id === 'welcome-overlay') {
+          // Check if welcome overlay class changed
+          updateCanvasVisibility();
+        }
+      });
+    });
+    
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    // Also check periodically as backup
+    setInterval(updateCanvasVisibility, 500);
+    
     window.addEventListener("mousedown", function(e) {
+      // Don't create balls if welcome page is visible
+      if (document.getElementById('welcome-overlay')) {
+        return;
+      }
       pushBalls(randBetween(10, 20), e.clientX, e.clientY);
       document.body.classList.add("is-pressed");
       longPress = setTimeout(function(){
@@ -32,6 +88,10 @@
       }, 500);
     }, false);
     window.addEventListener("mouseup", function(e) {
+      // Don't create balls if welcome page is visible
+      if (document.getElementById('welcome-overlay')) {
+        return;
+      }
       clearInterval(longPress);
       if (longPressed == true) {
         document.body.classList.remove("is-longpress");

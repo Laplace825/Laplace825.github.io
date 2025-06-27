@@ -177,6 +177,8 @@ $second_comment_name        : {{ lower (index $sortNav 1).name }};
 // Components
 @import '_common/components';
 
+@import '_welcome';
+
 // Schemes Layer
 // --------------------------------------------------
 {{ printf "@import '_schemes/%s/';" $P.scheme }}

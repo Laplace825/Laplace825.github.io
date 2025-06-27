@@ -1,0 +1,491 @@
+.welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  z-index: 99999;  // Higher than any other element on the page
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+  visibility: visible;
+  overflow: hidden;
+  
+  // Water wave animation layers - smooth flowing effect
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(100, 149, 237, 0.4) 25%, 
+        rgba(147, 112, 219, 0.3) 50%, 
+        rgba(72, 209, 204, 0.35) 75%, 
+        transparent 100%
+      );
+    z-index: -3;
+    transform: translateX(-100%);
+    animation: waterWave1 6s linear infinite;
+    clip-path: ellipse(150% 60px at 50% 50%);
+  }
+  
+  // Second wave layer with different speed and blur
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 105, 180, 0.25) 20%, 
+        rgba(65, 105, 225, 0.2) 45%, 
+        rgba(138, 43, 226, 0.3) 70%, 
+        transparent 100%
+      );
+    z-index: -2;
+    transform: translateX(-100%);
+    animation: waterWave2 8s linear infinite;
+    filter: blur(15px);
+    clip-path: ellipse(120% 80px at 50% 50%);
+  }
+  
+  // Additional wave glow layer for enhanced depth
+  .wave-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(147, 112, 219, 0.15) 30%, 
+        rgba(100, 149, 237, 0.12) 60%, 
+        transparent 100%
+      );
+    z-index: -1;
+    transform: translateX(-150%);
+    animation: waterWave3 10s linear infinite;
+    filter: blur(25px);
+    clip-path: ellipse(100% 100px at 50% 50%);
+  }
+  
+  &.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.welcome-content {
+  text-align: center;
+  color: #ffffff;
+  animation: welcomeSlideUp 1.2s ease-out;
+  position: relative;
+  z-index: 10;  // Ensure content is above particles and overlay
+  max-width: 90%;
+  
+  .welcome-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+  
+  .welcome-avatar {
+    flex-shrink: 0;
+    
+    img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      animation: welcomeFadeIn 1.2s ease-out 0.3s both;
+      
+      &:hover {
+        transform: scale(1.05);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+      }
+      
+      @media (max-width: 768px) {
+        width: 80px;
+        height: 80px;
+      }
+    }
+  }
+  
+  .welcome-text {
+    flex: 1;
+    text-align: left;
+    
+    @media (max-width: 768px) {
+      text-align: center;
+    }
+  }
+  
+  .welcome-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: welcomeGlow 2s ease-in-out infinite alternate;
+    
+    @media (max-width: 768px) {
+      font-size: 2.5rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 2rem;
+    }
+  }
+  
+  .welcome-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+    opacity: 0.8;
+    color: #cccccc;
+    animation: welcomeFadeIn 1.5s ease-out 0.5s both;
+    min-height: 1.5em; // Prevent layout shift during typing
+    
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+    
+    .typewriter-cursor {
+      color: #ffffff;
+      animation: none;
+      opacity: 1;
+    }
+    
+    .typewriter-cursor-blink {
+      color: #ffffff;
+      animation: typewriterBlink 1s infinite;
+    }
+  }
+  
+  .welcome-divider {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ffffff, transparent);
+    margin: 0 auto 2rem auto;
+    animation: welcomeFadeIn 1.7s ease-out 0.7s both;
+    
+    @media (max-width: 768px) {
+      width: 60px;
+    }
+  }
+  
+  .welcome-button {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333333;
+    background: #ffffff;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    animation: welcomeFadeIn 1.8s ease-out 1s both;
+    position: relative;
+    overflow: hidden;
+    
+    &:hover {
+      transform: translateY(-3px);
+      background: #f0f0f0;
+      box-shadow: 
+        0 12px 35px rgba(255, 255, 255, 0.25),
+        0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    
+    &:active {
+      transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+      padding: 12px 30px;
+      font-size: 1rem;
+    }
+  }
+  
+  .welcome-social {
+    margin-top: 2rem;
+    animation: welcomeFadeIn 2s ease-out 1.3s both;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: transparent !important;
+    overflow: hidden;
+    
+    tr {
+      background: transparent !important;
+      
+      td.social-text {
+        width: 30%;
+        font-size: 1rem;
+        opacity: 0.9;
+        color: #ffffff !important;
+        margin: 0;
+        font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        padding: 1rem 0.5rem 1rem 1.5rem;
+        vertical-align: middle;
+        white-space: nowrap;
+        background: transparent !important;
+        
+        @media (max-width: 768px) {
+          font-size: 0.9rem;
+          width: 35%;
+          padding: 1rem 0.3rem 1rem 1rem;
+        }
+      }
+      
+      td.social-links {
+        width: 70%;
+        vertical-align: middle;
+        text-align: left;
+        padding: 1rem 1.5rem 1rem 0.5rem;
+        white-space: nowrap;
+        overflow: visible;
+        background: transparent !important;
+        
+        @media (max-width: 768px) {
+          padding: 1rem 1rem 1rem 0.3rem;
+          width: 65%;
+        }
+        
+        .social-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 45px;
+          height: 45px;
+          background: rgba(255, 255, 255, 0.08) !important;
+          border: 2px solid rgba(255, 255, 255, 0.15) !important;
+          border-radius: 50%;
+          color: #ffffff !important;
+          text-decoration: none;
+          font-size: 1.1rem;
+          transition: all 0.3s ease;
+          margin-right: 0.8rem;
+          vertical-align: middle;
+          flex-shrink: 0;
+          
+          &:last-child {
+            margin-right: 0;
+          }
+          
+          &:hover {
+            transform: translateY(-3px) scale(1.1);
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+            color: #ffffff !important;
+          }
+          
+          i {
+            font-size: 1.1rem;
+          }
+          
+          @media (max-width: 768px) {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            
+            i {
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes welcomeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes welcomeGlow {
+  from {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  to {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes backgroundShiftDark {
+  0% {
+    background: 
+      radial-gradient(circle at 30% 60%, rgba(255, 165, 0, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 70% 30%, rgba(138, 43, 226, 0.1) 0%, transparent 40%),
+      linear-gradient(135deg, 
+        rgba(26, 26, 26, 0.80) 0%, 
+        rgba(0, 0, 0, 0.85) 50%, 
+        rgba(45, 45, 45, 0.80) 100%);
+  }
+  50% {
+    background: 
+      radial-gradient(circle at 70% 40%, rgba(255, 69, 0, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 30% 70%, rgba(72, 61, 139, 0.12) 0%, transparent 45%),
+      linear-gradient(135deg, 
+        rgba(20, 20, 30, 0.82) 0%, 
+        rgba(0, 0, 0, 0.87) 50%, 
+        rgba(35, 35, 50, 0.82) 100%);
+  }
+  100% {
+    background: 
+      radial-gradient(circle at 50% 80%, rgba(255, 140, 0, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(106, 90, 205, 0.08) 0%, transparent 50%),
+      linear-gradient(135deg, 
+        rgba(30, 30, 40, 0.78) 0%, 
+        rgba(0, 0, 0, 0.83) 50%, 
+        rgba(40, 40, 55, 0.78) 100%);
+  }
+}
+
+@keyframes typewriterBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+// Particles background effect
+.welcome-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;  // Changed from -2 to 1, should be above overlay but below content
+  
+  .particle {
+    position: absolute;
+    background: rgba(255, 215, 0, 0.4);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    
+    &:nth-child(odd) {
+      background: rgba(138, 43, 226, 0.4);
+      box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
+    }
+    
+    &:nth-child(1) { width: 10px; height: 10px; left: 10%; animation-delay: 0s; }
+    &:nth-child(2) { width: 6px; height: 6px; left: 20%; animation-delay: 1s; }
+    &:nth-child(3) { width: 8px; height: 8px; left: 30%; animation-delay: 2s; }
+    &:nth-child(4) { width: 12px; height: 12px; left: 40%; animation-delay: 3s; }
+    &:nth-child(5) { width: 4px; height: 4px; left: 50%; animation-delay: 1.5s; }
+    &:nth-child(6) { width: 14px; height: 14px; left: 60%; animation-delay: 4s; }
+    &:nth-child(7) { width: 8px; height: 8px; left: 70%; animation-delay: 2.5s; }
+    &:nth-child(8) { width: 10px; height: 10px; left: 80%; animation-delay: 5s; }
+    &:nth-child(9) { width: 6px; height: 6px; left: 90%; animation-delay: 3.5s; }
+  }
+}
+
+// Water wave animations - smooth continuous flow
+@keyframes waterWave1 {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes waterWave2 {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes waterWave3 {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes waveGlow {
+  0% {
+    opacity: 0.8;
+    transform: translateX(-50px) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(0px) scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: translateX(50px) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10vh) rotate(360deg);
+    opacity: 0;
+  }
+}
