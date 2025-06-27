@@ -5,7 +5,7 @@ title: '深度学习到底在干什么?'
 author: Laplace
 description: "What dose the Deep Learning(DL) do?"
 
-math: katex
+math: mathjax
 tags:
   - ML
   - DL
