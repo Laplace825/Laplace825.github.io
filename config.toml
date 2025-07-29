@@ -1,0 +1,123 @@
+# Fuwari Configuration File
+# This TOML file contains all configuration options, including optional ones
+
+[site]
+title = "Laplace"
+subtitle = "Blog"
+lang = "zh_CN"  # 'en', 'zh_CN'
+url = "https://127.0.0.1:4321"  # Your site URL for deployment
+
+[site.themeColor]
+hue = 250  # Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345
+fixed = false  # Hide the theme color picker for visitors
+
+[site.banner]
+enable = false
+src = "assets/images/demo-banner.png"  # Relative to the /src directory. Relative to the /public directory if it starts with '/'
+position = "center"  # Optional: Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
+
+[site.banner.credit]
+enable = false  # Display the credit text of the banner image
+text = ""  # Credit text to be displayed
+url = ""  # Optional: URL link to the original artwork or artist's page
+
+[site.toc]
+enable = true  # Display the table of contents on the right side of the post
+depth = 4  # Maximum heading depth to show in the table, from 1 to 3
+
+# Example favicon configurations (optional fields: theme, sizes)
+# Leave empty array to use default favicon
+[[site.favicon]]
+# src = "/favicon/icon.png"  # Path of the favicon, relative to the /public directory
+# theme = "light"  # Optional: Either 'light' or 'dark', set only if you have different favicons for light and dark mode
+# sizes = "32x32"  # Optional: Size of the favicon, set only if you have favicons of different sizes
+
+[navBar]
+# You can use LinkPreset values: 0 = Home, 1 = Archive, 2 = About, 3 = FriendLinks
+# Or define custom links with name, url, and optional external field
+
+[[navBar.links]]
+preset = 0  # Home
+
+[[navBar.links]]
+preset = 1  # Archive
+
+[[navBar.links]]
+preset = 2  # About
+
+[[navBar.links]]
+preset = 3  # FriendLinks
+
+[[navBar.links]]
+name = "GitHub"
+url = "https://github.com/laplace825"# // Internal links should not include the base path, as it is automatically added
+external = true# // Show an external link icon and will open in a new tab
+
+[profile]
+avatar = "assets/images/avatar.png"  # Optional: Relative to the /src directory. Relative to the /public directory if it starts with '/'
+name = "Laplace"
+bio = "「0」が過去で 「1」が未来. 🌟"  # Optional
+
+[[profile.links]]
+name = "Telegram"
+icon = "fa6-brands:telegram"  # Visit https://icones.js.org/ for icon codes
+url = "https://t.me/laplace_hachi"
+
+[[profile.links]]
+name = "GitHub"
+icon = "fa6-brands:github"
+url = "https://github.com/laplace825"
+
+[[profile.links]]
+name = "Email"
+icon = "material-symbols:mail-rounded"
+url = "mailto:laplace.he@outlook.com"
+
+[license]
+enable = true
+name = "CC BY-NC-SA 4.0"
+url = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+
+[expressiveCode]
+# Note: Some styles (such as background color) are being overridden, see the astro.config.mjs file.
+# Please select a dark theme, as this blog theme currently only supports dark background color
+theme = "catppuccin-mocha"
+
+# Friend Links Configuration
+[friendLinks]
+enable = true  # Enable or disable friend links widget
+
+[[friendLinks.links]]
+name = "Qlexander"
+description = "Vanitas Vanitatum Et Omnia Vanitas"
+avatar = "https://s2.loli.net/2024/10/21/DwQyKdZoslihtUS.png"
+url = "https://qlexander.cn"
+
+[[friendLinks.links]]
+name = "Ray"
+description = "ENDsoft's Blog"
+avatar = "https://r-ay.cn/images/cb254102-aa64-4051-af5f-77a325f14ff7.png"
+url = "https://blog.r-ay.cn/"
+
+# name = "Astro"
+# url = "https://astro.build"
+# description = "Build fast websites"
+# avatar = "https://astro.build/favicon.svg"
+
+# [[friendLinks.links]]
+# name = "Tailwind CSS"
+# url = "https://tailwindcss.com"
+# description = "Utility-first CSS framework"
+# avatar = "https://tailwindcss.com/favicons/favicon-32x32.png"
+
+# [[friendLinks.links]]
+# name = "GitHub"
+# url = "https://github.com"
+# description = "Code hosting platform"
+# avatar = "https://github.com/favicon.ico"
+
+# [[friendLinks.links]]
+# name = "TypeScript"
+# url = "https://www.typescriptlang.org"
+# description = "JavaScript with syntax for types"
+# avatar = "https://www.typescriptlang.org/favicon-32x32.png"

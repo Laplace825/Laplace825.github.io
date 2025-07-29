@@ -1,0 +1,266 @@
+---
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
+import Layout from "../layouts/Layout.astro";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { tomlConfig } from "../utils/generated-config";
+
+const friendLinksConfig = tomlConfig.friendLinks || {};
+const friendLinks = friendLinksConfig.links || [];
+---
+
+<Layout title={i18n(I18nKey.friendLinks)}>
+  <MainGridLayout>
+    <div class="card-base px-8 py-6">
+      <h1 class="text-3xl font-bold mb-8 text-neutral-900 dark:text-neutral-100">
+        {i18n(I18nKey.friendLinks)}
+      </h1>
+      
+      {friendLinks.length > 0 ? (
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {friendLinks.map((link) => (
+            <a 
+              href={link.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="friend-card"
+              title={link.description}
+            >
+              <div class="friend-avatar-large">
+                <img 
+                  src={link.avatar} 
+                  alt={link.name}
+                  loading="lazy"
+                  onerror="this.style.display='none'"
+                />
+              </div>
+              <div class="friend-content">
+                <h3 class="friend-name-large">{link.name}</h3>
+                <p class="friend-desc-large text-75">{link.description}</p>
+                <div class="friend-url text-50">{new URL(link.url).hostname}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-neutral-600 dark:text-neutral-400 text-lg">
+            {i18n(I18nKey.noFriendLinks)}
+          </p>
+        </div>
+      )}
+      
+      <!-- Friend Link Exchange Info -->
+      <div class="card-base px-8 py-6 mt-8">
+        <h2 class="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">
+          {i18n(I18nKey.friendLinkExchange)}
+        </h2>
+        
+        <div class="space-y-4">
+          <p class="text-neutral-700 dark:text-neutral-300">
+            {i18n(I18nKey.friendLinkExchangeInfo)}
+          </p>
+          
+          <div class="bg-neutral-50 dark:bg-neutral-900 rounded-md p-4 font-mono text-sm overflow-x-auto border border-neutral-200 dark:border-neutral-700" style="background: var(--codeblock-bg); border-color: rgba(var(--line-color), 0.3);">
+            <pre class="text-neutral-700 dark:text-neutral-300"><code><span class="toml-section">[[friendLinks.links]]</span>
+<span class="toml-key">name</span> <span class="toml-operator">=</span> <span class="toml-string">"Your Site Name"</span>
+<span class="toml-key">url</span> <span class="toml-operator">=</span> <span class="toml-string">"https://yoursite.com"</span>
+<span class="toml-key">description</span> <span class="toml-operator">=</span> <span class="toml-string">"Brief description of your site"</span>
+<span class="toml-key">avatar</span> <span class="toml-operator">=</span> <span class="toml-string">"https://yoursite.com/avatar.png"</span></code></pre>
+          </div>
+          
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <p class="text-blue-800 dark:text-blue-200 text-sm">
+              💡 {i18n(I18nKey.friendLinkContactInfo)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </MainGridLayout>
+</Layout>
+
+<style>
+.friend-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--line-color);
+  border-radius: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.friend-card:hover {
+  background: var(--card-bg);
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px var(--line-color);
+  opacity: 1;
+}
+
+.friend-avatar-large {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--btn-regular-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border: 2px solid var(--line-divider);
+}
+
+.friend-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.friend-name-large {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.friend-desc-large {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.friend-url {
+  font-size: 0.8rem;
+  font-family: monospace;
+  background: var(--btn-regular-bg);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+@media (max-width: 768px) {
+  .friend-card {
+    padding: 1.5rem;
+  }
+  
+  .friend-avatar-large {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .friend-name-large {
+    font-size: 1.125rem;
+  }
+  
+  .min-w-20 {
+    min-width: 4rem;
+  }
+}
+
+/* Friend Link Exchange Styles */
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.min-w-20 {
+  min-width: 5rem;
+}
+
+/* Code block styles */
+pre {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+code {
+  font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* TOML Syntax Highlighting - GitHub Dark Theme Colors */
+.toml-section {
+  color: #ff7b72; /* Red - Array table headers */
+  font-weight: 600;
+}
+
+.toml-key {
+  color: #7ee787; /* Green - Keys */
+  font-weight: 400;
+}
+
+.toml-operator {
+  color: #e6edf3; /* White - Operators */
+}
+
+.toml-string {
+  color: #a5d6ff; /* Light blue - String values */
+}
+
+/* Light mode fallback - GitHub Light theme colors */
+@media (prefers-color-scheme: light) {
+  .toml-section {
+    color: #cf222e;
+  }
+  
+  .toml-key {
+    color: #116329;
+  }
+  
+  .toml-operator {
+    color: #24292f;
+  }
+  
+  .toml-string {
+    color: #0969da;
+  }
+}
+
+/* Explicit dark mode class support */
+:global(.dark) .toml-section {
+  color: #ff7b72;
+}
+
+:global(.dark) .toml-key {
+  color: #7ee787;
+}
+
+:global(.dark) .toml-operator {
+  color: #e6edf3;
+}
+
+:global(.dark) .toml-string {
+  color: #a5d6ff;
+}
+</style>

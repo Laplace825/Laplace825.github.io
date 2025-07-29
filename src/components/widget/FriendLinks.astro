@@ -1,0 +1,395 @@
+---
+import I18nKey from "../../i18n/i18nKey";
+import { i18n } from "../../i18n/translation";
+import { tomlConfig } from "../../utils/generated-config";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+
+const className = Astro.props.class;
+const style = Astro.props.style;
+
+// 友链配置 - 从 TOML 配置文件中读取
+const friendLinksConfig = tomlConfig.friendLinks || {};
+const isEnabled = friendLinksConfig.enable ?? true;
+const friendLinks = friendLinksConfig.links || [];
+
+// 如果禁用了友链或友链列表为空，则不渲染组件
+if (!isEnabled || !Array.isArray(friendLinks) || friendLinks.length === 0) {
+	return null;
+}
+---
+
+<div class={`friend-links-widget card-base pb-4 ${className}`} style={style}>
+	<div class="friend-links-header">
+		<div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4
+			before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
+			before:absolute before:left-[-16px] before:top-[5.5px]">
+			{i18n(I18nKey.friendLinks)}
+		</div>
+		<button class="collapse-toggle" aria-label="Toggle friend links">
+			<span class="arrow-icon">➜</span>
+		</button>
+	</div>
+	
+	<div class="friend-links-content collapsed">
+		<div class="friend-links-container">
+			{friendLinks.map((link) => (
+				<a 
+					href={link.url}
+					target="_blank" 
+					rel="noopener noreferrer"
+					class="friend-link-item bg-black/[0.03] dark:bg-white/[0.05] border border-black/10 dark:border-white/10 hover:bg-black/[0.06] dark:hover:bg-white/[0.1]"
+					title={link.description}
+				>
+					<div class="friend-avatar" onclick="openAvatarLightbox(this)">
+						<img 
+							src={link.avatar} 
+							alt={link.name}
+							loading="lazy"
+							onerror="this.style.display='none'"
+						/>
+					</div>
+					<div class="friend-info">
+						<div class="friend-name text-[var(--primary)]">{link.name}</div>
+						<div class="friend-desc text-black/70 dark:text-white/70">{link.description}</div>
+					</div>
+				</a>
+			))}
+		</div>
+	</div>
+</div>
+
+<style>
+.friend-links-widget {
+	position: relative;
+}
+
+.friend-links-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-right: 1rem;
+	margin-bottom: 0;
+}
+
+.friend-links-header .font-bold {
+	margin-bottom: 0;
+}
+
+.collapse-toggle {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0.375rem;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+	color: var(--primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2rem;
+	min-height: 2rem;
+	position: relative;
+	margin-top: 1rem;
+	align-self: flex-start;
+}
+
+.collapse-toggle:hover {
+	background: rgba(var(--primary), 0.1);
+	transform: scale(1.05);
+}
+
+.collapse-toggle:active {
+	transform: scale(0.95);
+}
+
+.arrow-icon {
+	font-size: 1.125rem;
+	line-height: 1;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+	transform: rotate(0deg);
+	display: inline-block;
+}
+
+.friend-links-content {
+	overflow: hidden;
+	transition: all 0.3s ease;
+	padding: 0 1rem;
+	margin-top: 0.5rem;
+}
+
+.friend-links-content.collapsed {
+	max-height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.friend-links-content:not(.collapsed) {
+	max-height: 500px;
+	padding-bottom: 1rem;
+}
+
+.friend-links-content.collapsed .friend-links-container {
+	opacity: 0;
+}
+
+.friend-links-content:not(.collapsed) .friend-links-container {
+	opacity: 1;
+	transition: opacity 0.2s ease 0.1s;
+}
+
+.friend-links-container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.friend-link-item {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	text-decoration: none;
+	transition: all 0.2s ease;
+}
+
+.friend-link-item:hover {
+	transform: translateY(-1px);
+}
+
+.friend-avatar {
+	flex-shrink: 0;
+	width: 4rem;
+	height: 4rem;
+	border-radius: 50%;
+	overflow: hidden;
+	background: rgba(var(--card-bg), 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: 2px solid transparent;
+}
+
+.friend-avatar:hover {
+	transform: scale(1.25);
+	border-color: rgba(var(--primary), 0.3);
+	box-shadow: 0 4px 12px rgba(var(--primary), 0.15);
+}
+
+.friend-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.friend-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.friend-name {
+	font-weight: 600;
+	font-size: 0.875rem;
+	margin-bottom: 0.125rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.friend-desc {
+	font-size: 0.75rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Arrow rotation when expanded */
+.friend-links-widget.expanded .arrow-icon {
+	transform: rotate(90deg);
+}
+
+/* Smooth animation for content expansion */
+.friend-links-content {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.friend-links-container {
+	transition: opacity 0.3s ease;
+}
+
+/* Avatar Lightbox Styles */
+.avatar-lightbox {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.8);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+	opacity: 0;
+	visibility: hidden;
+	transition: all 0.3s ease;
+	cursor: pointer;
+}
+
+.avatar-lightbox.show {
+	opacity: 1;
+	visibility: visible;
+}
+
+.avatar-lightbox-content {
+	position: relative;
+	max-width: 90vw;
+	max-height: 90vh;
+	animation: lightboxZoom 0.3s ease;
+}
+
+.avatar-lightbox img {
+	max-width: 100%;
+	max-height: 100%;
+	border-radius: 12px;
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.avatar-lightbox-close {
+	position: absolute;
+	top: -40px;
+	right: -40px;
+	width: 32px;
+	height: 32px;
+	background: rgba(255, 255, 255, 0.9);
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	color: #333;
+	transition: all 0.2s ease;
+}
+
+.avatar-lightbox-close:hover {
+	background: rgba(255, 255, 255, 1);
+	transform: scale(1.1);
+}
+
+@keyframes lightboxZoom {
+	from {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+</style>
+
+<script>
+// 友链折叠功能
+document.addEventListener('DOMContentLoaded', function() {
+	const toggleButtons = document.querySelectorAll('.friend-links-widget .collapse-toggle');
+	
+	toggleButtons.forEach(button => {
+		button.addEventListener('click', function() {
+			const widget = button.closest('.friend-links-widget') as HTMLElement;
+			const content = widget?.querySelector('.friend-links-content') as HTMLElement;
+			
+			if (content && widget) {
+				const isCollapsed = content.classList.contains('collapsed');
+				
+				if (isCollapsed) {
+					// Expand
+					content.classList.remove('collapsed');
+					widget.classList.add('expanded');
+				} else {
+					// Collapse
+					content.classList.add('collapsed');
+					widget.classList.remove('expanded');
+				}
+			}
+		});
+	});
+});
+
+// 头像灯箱功能
+function openAvatarLightbox(avatarElement: HTMLElement) {
+	const img = avatarElement.querySelector('img');
+	if (!img || !img.src) return;
+	
+	// 创建灯箱元素
+	const lightbox = document.createElement('div');
+	lightbox.className = 'avatar-lightbox';
+	
+	const content = document.createElement('div');
+	content.className = 'avatar-lightbox-content';
+	
+	const lightboxImg = document.createElement('img');
+	lightboxImg.src = img.src;
+	lightboxImg.alt = img.alt;
+	
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'avatar-lightbox-close';
+	closeBtn.innerHTML = '×';
+	closeBtn.onclick = function(e: Event) {
+		e.stopPropagation();
+		closeLightbox();
+	};
+	
+	content.appendChild(lightboxImg);
+	content.appendChild(closeBtn);
+	lightbox.appendChild(content);
+	
+	// 添加到页面
+	document.body.appendChild(lightbox);
+	
+	// 显示灯箱
+	setTimeout(() => {
+		lightbox.classList.add('show');
+	}, 10);
+	
+	// 点击背景关闭
+	lightbox.onclick = function(e: Event) {
+		if (e.target === lightbox) {
+			closeLightbox();
+		}
+	};
+	
+	// 阻止内容区域点击事件冒泡
+	content.onclick = function(e: Event) {
+		e.stopPropagation();
+	};
+	
+	// ESC键关闭
+	const handleEsc = function(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			closeLightbox();
+		}
+	};
+	document.addEventListener('keydown', handleEsc);
+	
+	function closeLightbox() {
+		lightbox.classList.remove('show');
+		document.removeEventListener('keydown', handleEsc);
+		setTimeout(() => {
+			if (lightbox.parentNode) {
+				lightbox.parentNode.removeChild(lightbox);
+			}
+		}, 300);
+	}
+}
+
+// 将函数添加到全局作用域
+(window as any).openAvatarLightbox = openAvatarLightbox;
+</script>
