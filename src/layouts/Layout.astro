@@ -572,7 +572,7 @@ let mouseX = 0;
 let mouseY = 0;
 let isMoving = false;
 
-function createTrail(x, y) {
+function createTrail(x: number, y: number) {
     const trail = document.createElement('div');
     trail.className = 'cursor-trail';
     trail.style.left = x + 'px';
@@ -593,7 +593,7 @@ function createTrail(x, y) {
     }, 800);
 }
 
-function handleMouseMove(e) {
+function handleMouseMove(e: MouseEvent) {
     mouseX = e.clientX;
     mouseY = e.clientY;
     
