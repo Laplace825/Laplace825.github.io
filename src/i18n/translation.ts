@@ -21,7 +21,15 @@ export function getTranslation(lang: string): Translation {
 	return map[lang.toLowerCase()] || defaultTranslation;
 }
 
-export function i18n(key: I18nKey): string {
+export function i18n(key: I18nKey, params?: Record<string, string>): string {
 	const lang = siteConfig.lang || "en";
-	return getTranslation(lang)[key];
+	let translation = getTranslation(lang)[key];
+
+	if (params) {
+		Object.keys(params).forEach((param) => {
+			translation = translation.replace(`{${param}}`, params[param]);
+		});
+	}
+
+	return translation;
 }

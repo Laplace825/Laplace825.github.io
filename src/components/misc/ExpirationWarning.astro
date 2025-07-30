@@ -1,0 +1,61 @@
+---
+import { Icon } from "astro-icon/components";
+import I18nKey from "../../i18n/i18nKey";
+import { i18n } from "../../i18n/translation";
+
+interface Props {
+	publishedDate: Date;
+	class?: string;
+}
+
+const { publishedDate, class: className } = Astro.props;
+
+// 计算距离发布时间的天数
+const now = new Date();
+const timeDiff = now.getTime() - publishedDate.getTime();
+const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+// 计算年数和月数
+const yearsDiff = Math.floor(daysDiff / 365);
+const monthsDiff = Math.floor((daysDiff % 365) / 30);
+const remainingDays = daysDiff % 30;
+
+// 格式化时间显示
+let timeAgoText = "";
+if (yearsDiff > 0) {
+	timeAgoText =
+		yearsDiff > 1
+			? `${yearsDiff} ${i18n(I18nKey.years)}`
+			: `${yearsDiff} ${i18n(I18nKey.year)}`;
+	if (monthsDiff > 0) {
+		timeAgoText +=
+			monthsDiff > 1
+				? ` ${monthsDiff} ${i18n(I18nKey.months)}`
+				: ` ${monthsDiff} ${i18n(I18nKey.month)}`;
+	}
+} else if (monthsDiff > 0) {
+	timeAgoText =
+		monthsDiff > 1
+			? `${monthsDiff} ${i18n(I18nKey.months)}`
+			: `${monthsDiff} ${i18n(I18nKey.month)}`;
+} else {
+	timeAgoText =
+		daysDiff > 1
+			? `${daysDiff} ${i18n(I18nKey.days)}`
+			: `${daysDiff} ${i18n(I18nKey.day)}`;
+}
+---
+
+<div class:list={["card-base border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg mb-6", className]}>
+	<div class="flex items-start gap-3">
+		<Icon name="material-symbols:warning-outline-rounded" class="text-orange-500 text-xl mt-0.5 flex-shrink-0" />
+		<div class="flex-1">
+			<h4 class="text-orange-800 dark:text-orange-300 font-semibold mb-2">
+				{i18n(I18nKey.expiredContentWarning)}
+			</h4>
+			<p class="text-orange-700 dark:text-orange-400 text-sm leading-relaxed">
+				{i18n(I18nKey.expiredContentMessage, { timeAgo: timeAgoText })}
+			</p>
+		</div>
+	</div>
+</div>

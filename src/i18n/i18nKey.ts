@@ -43,6 +43,18 @@ enum I18nKey {
 	friendLinkSiteDesc = "friendLinkSiteDesc",
 	friendLinkSiteAvatar = "friendLinkSiteAvatar",
 	friendLinkContactInfo = "friendLinkContactInfo",
+
+	// Time units
+	year = "year",
+	years = "years",
+	month = "month",
+	months = "months",
+	day = "day",
+	days = "days",
+
+	// Expiration warning
+	expiredContentWarning = "expiredContentWarning",
+	expiredContentMessage = "expiredContentMessage",
 }
 
 export default I18nKey;

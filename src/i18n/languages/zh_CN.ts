@@ -47,4 +47,17 @@ export const zh_CN: Translation = {
 	[Key.friendLinkSiteDesc]: "网站描述",
 	[Key.friendLinkSiteAvatar]: "网站头像",
 	[Key.friendLinkContactInfo]: "你可以通过邮件联系我.",
+
+	// Time units
+	[Key.year]: "年",
+	[Key.years]: "年",
+	[Key.month]: "个月",
+	[Key.months]: "个月",
+	[Key.day]: "天",
+	[Key.days]: "天",
+
+	// Expiration warning
+	[Key.expiredContentWarning]: "内容可能已过时",
+	[Key.expiredContentMessage]:
+		"这篇文章发布于 {timeAgo} 前，其中的信息可能已经过时。请在阅读时注意文章的时效性。",
 };

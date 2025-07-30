@@ -1,5 +1,6 @@
 ---
 import path from "node:path";
+import ExpirationWarning from "@components/misc/ExpirationWarning.astro";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/misc/Markdown.astro";
 import I18nKey from "@i18n/i18nKey";
@@ -101,6 +102,8 @@ const jsonLd = {
                 <ImageWrapper id="post-cover" src={entry.data.image} basePath={path.join("content/posts/", getDir(entry.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
 
+            <!-- Expiration warning -->
+            {entry.data.expired && <ExpirationWarning publishedDate={entry.data.published} class="onload-animation" />}
 
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />

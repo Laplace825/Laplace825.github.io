@@ -48,4 +48,17 @@ export const en: Translation = {
 	[Key.friendLinkSiteAvatar]: "Site Avatar",
 	[Key.friendLinkContactInfo]:
 		"Contact me via email or comments for friend link exchange!",
+
+	// Time units
+	[Key.year]: "year",
+	[Key.years]: "years",
+	[Key.month]: "month",
+	[Key.months]: "months",
+	[Key.day]: "day",
+	[Key.days]: "days",
+
+	// Expiration warning
+	[Key.expiredContentWarning]: "Content May Be Outdated",
+	[Key.expiredContentMessage]:
+		"This article was published {timeAgo} ago. The information contained in it may be outdated. Please pay attention to the timeliness of the article when reading.",
 };
