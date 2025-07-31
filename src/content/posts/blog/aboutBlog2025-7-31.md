@@ -9,6 +9,10 @@ expired: true
 
 最近把博客迁移到了 [Astro](https://astro.build/) & [Fuwari](https://github.com/saicaca/fuwari), 并新加了一些内容. 然而所有代码都是 Claude Sonnet 4 写的 😂. 后续可能会加一下 giscus.
 
+<!--more-->
+
+# 改动
+
 ## 配置文件
 
 一开始发现配置文件是 `ts`, 虽然基本没差, 但是个人还是更想用 `toml`, 所以新加了 `/src/utils/build-config.mjs` 来根据 `/config.toml` 生成 `ts` 配置, 然后其他文件用生成的 `Record`.
