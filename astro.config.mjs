@@ -3,6 +3,7 @@ import svelte from "@astrojs/svelte";
 import tailwind from "@astrojs/tailwind";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
+import rehypeTypst from "@myriaddreamin/rehype-typst";
 import swup from "@swup/astro";
 import { defineConfig } from "astro/config";
 import expressiveCode from "astro-expressive-code";
@@ -114,8 +115,9 @@ export default defineConfig({
 			parseDirectiveNode,
 		],
 		rehypePlugins: [
-			rehypeKatex,
+			// rehypeKatex,
 			rehypeSlug,
+			rehypeTypst,
 			[
 				rehypeComponents,
 				{
@@ -155,6 +157,9 @@ export default defineConfig({
 		],
 	},
 	vite: {
+		ssr: {
+			external: ["@myriaddreamin/typst-ts-node-compiler"],
+		},
 		build: {
 			rollupOptions: {
 				onwarn(warning, warn) {

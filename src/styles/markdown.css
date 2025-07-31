@@ -114,11 +114,58 @@
         }
 
     }
+    
+    svg.typst-doc {
+        @apply transition;
+        /* Force all elements inside to use current color */
+        color: currentColor !important;
+        /* Default alignment for block formulas */
+        vertical-align: middle !important;
+    }
+    
+    /* Inline formulas - align with prose text baseline */
+    p svg.typst-doc,
+    span svg.typst-doc,
+    li svg.typst-doc {
+        /* Fine-tuned alignment for prose-base typography (16px font, 1.75 line-height) */
+        vertical-align: -0.575em !important; /* Slight downward adjustment for mathematical symbols */
+        /* Slightly larger than text for better readability */
+        font-size: 1.2em !important;
+        /* Ensure it stays inline */
+        display: inline !important;
+        margin-left: 0.1em !important; /* Small left margin for spacing */
+        margin-right: 0.1em !important; /* Small right margin for spacing */
+        margin-bottom: 0em !important;
+        /* Adjust height limit accordingly */
+        /* max-height: auto !important; */
+        /* height: auto !important; */
+    }
+    
+    
+    
+    /* Typst SVG complete color override - target everything */
+    svg.typst-doc,
+    svg.typst-doc *,
+    svg.typst-doc .typst-text,
+    svg.typst-doc g,
+    svg.typst-doc path,
+    svg.typst-doc use,
+    svg.typst-doc text,
+    svg.typst-doc tspan,
+    svg.typst-doc .outline_glyph {
+        fill: currentColor !important;
+        stroke: currentColor !important;
+        --glyph_fill: currentColor !important;
+        --glyph_stroke: currentColor !important;
+        transition: fill 0.3s ease, stroke 0.3s ease !important;
+        margin-bottom: 0.75em !important;
+        font-size: 1.25em;
+    }
 
-    .katex-display-container {
+    /* .katex-display-container {
         max-width: 100%;
         overflow-x: auto;
         margin: 1em 0;
-    }
+    } */
     
 }

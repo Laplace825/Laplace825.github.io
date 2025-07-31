@@ -1,6 +1,6 @@
 ---
 title: 为什么可以归一化
-published: 2025-06-14
+published: 2025-06-05
 description: 突发奇想, 似乎解释了关于数据处理时, 为什么图片可以归一化的问题.
 tags: [Computer Vision, ML]
 category: ML

@@ -18,7 +18,7 @@ Windows 下 vscode 已经足够好了，但是还是很喜欢 neovide 的动画�
 
 打开`PowerShell`输入(最好有魔法)
 
-```PowerShell
+```powershell
 Set-ExecutionPolicy RemoteSigned -Scope Process -Force; iwr -useb get.scoop.sh | iex
 ```
 
@@ -61,7 +61,7 @@ echo $PROFILE
 + 将上面输出的文件进行更改,添加如下命令,下面的路径请更改为你的`neovide`可执行文件路径，
 如果只用`scoop`安装且没有改路径的话，大概率可以在`C:\Users\你的用户名\scoop\apps`下找到。
 
-```PowerShell
+```powershell
 Set-Alias vim "path/to/your/neovide.exe"
 ```
 

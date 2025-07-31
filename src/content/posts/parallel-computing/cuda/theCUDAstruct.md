@@ -1,6 +1,6 @@
 ---
 title: NVIDIA GPU 与 CUDA 结构
-published: 2025-06-14
+published: 2025-05-11
 description: 一文读懂 NVIDIA GPU 与 CUDA 编程结构概念(雾).
 tags: [Parallel-Computing, CUDA]
 category: CUDA
