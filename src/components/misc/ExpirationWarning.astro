@@ -9,44 +9,10 @@ interface Props {
 }
 
 const { publishedDate, class: className } = Astro.props;
-
-// 计算距离发布时间的天数
-const now = new Date();
-const timeDiff = now.getTime() - publishedDate.getTime();
-const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
-
-// 计算年数和月数
-const yearsDiff = Math.floor(daysDiff / 365);
-const monthsDiff = Math.floor((daysDiff % 365) / 30);
-const remainingDays = daysDiff % 30;
-
-// 格式化时间显示
-let timeAgoText = "";
-if (yearsDiff > 0) {
-	timeAgoText =
-		yearsDiff > 1
-			? `${yearsDiff} ${i18n(I18nKey.years)}`
-			: `${yearsDiff} ${i18n(I18nKey.year)}`;
-	if (monthsDiff > 0) {
-		timeAgoText +=
-			monthsDiff > 1
-				? ` ${monthsDiff} ${i18n(I18nKey.months)}`
-				: ` ${monthsDiff} ${i18n(I18nKey.month)}`;
-	}
-} else if (monthsDiff > 0) {
-	timeAgoText =
-		monthsDiff > 1
-			? `${monthsDiff} ${i18n(I18nKey.months)}`
-			: `${monthsDiff} ${i18n(I18nKey.month)}`;
-} else {
-	timeAgoText =
-		daysDiff > 1
-			? `${daysDiff} ${i18n(I18nKey.days)}`
-			: `${daysDiff} ${i18n(I18nKey.day)}`;
-}
 ---
 
-<div class:list={["card-base border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg mb-6", className]}>
+<div class:list={["card-base border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg mb-6", className]} 
+     data-published-date={publishedDate.toISOString()}>
 	<div class="flex items-start gap-3">
 		<Icon name="material-symbols:warning-outline-rounded" class="text-orange-500 text-xl mt-0.5 flex-shrink-0" />
 		<div class="flex-1">
@@ -54,8 +20,89 @@ if (yearsDiff > 0) {
 				{i18n(I18nKey.expiredContentWarning)}
 			</h4>
 			<p class="text-orange-700 dark:text-orange-400 text-sm leading-relaxed">
-				{i18n(I18nKey.expiredContentMessage, { timeAgo: timeAgoText })}
+				<span data-expiration-message 
+				      data-year-text={i18n(I18nKey.year)}
+				      data-years-text={i18n(I18nKey.years)}
+				      data-month-text={i18n(I18nKey.month)}
+				      data-months-text={i18n(I18nKey.months)}
+				      data-day-text={i18n(I18nKey.day)}
+				      data-days-text={i18n(I18nKey.days)}
+				      data-message-template={i18n(I18nKey.expiredContentMessage, { timeAgo: "__TIME_AGO__" })}>
+					{i18n(I18nKey.expiredContentMessage, { timeAgo: "加载中..." })}
+				</span>
 			</p>
 		</div>
 	</div>
 </div>
+
+<script>
+function initExpirationWarnings() {
+	const warnings = document.querySelectorAll('[data-published-date]');
+	
+	warnings.forEach((warning) => {
+		const publishedDateString = warning.getAttribute('data-published-date');
+		if (!publishedDateString) return;
+		
+		const publishedDate = new Date(publishedDateString);
+		const messageElement = warning.querySelector('[data-expiration-message]');
+		
+		if (!messageElement) return;
+		
+		// 获取本地化文本
+		const yearText = messageElement.getAttribute('data-year-text');
+		const yearsText = messageElement.getAttribute('data-years-text');
+		const monthText = messageElement.getAttribute('data-month-text');
+		const monthsText = messageElement.getAttribute('data-months-text');
+		const dayText = messageElement.getAttribute('data-day-text');
+		const daysText = messageElement.getAttribute('data-days-text');
+		const messageTemplate = messageElement.getAttribute('data-message-template');
+		
+		if (!yearText || !yearsText || !monthText || !monthsText || !dayText || !daysText || !messageTemplate) {
+			return;
+		}
+		
+		// 计算时间差
+		const now = new Date();
+		const timeDiff = now.getTime() - publishedDate.getTime();
+		const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+		
+		// 计算年数和月数
+		const yearsDiff = Math.floor(daysDiff / 365);
+		const monthsDiff = Math.floor((daysDiff % 365) / 30);
+		
+		// 格式化时间显示
+		let timeAgoText = "";
+		if (yearsDiff > 0) {
+			timeAgoText = yearsDiff > 1 ? `${yearsDiff} ${yearsText}` : `${yearsDiff} ${yearText}`;
+			if (monthsDiff > 0) {
+				timeAgoText += monthsDiff > 1 ? ` ${monthsDiff} ${monthsText}` : ` ${monthsDiff} ${monthText}`;
+			}
+		} else if (monthsDiff > 0) {
+			timeAgoText = monthsDiff > 1 ? `${monthsDiff} ${monthsText}` : `${monthsDiff} ${monthText}`;
+		} else {
+			timeAgoText = daysDiff > 1 ? `${daysDiff} ${daysText}` : `${daysDiff} ${dayText}`;
+		}
+		
+		// 更新消息文本（只执行一次）
+		const updatedMessage = messageTemplate.replace('__TIME_AGO__', timeAgoText);
+		
+		// 创建带有突出显示时间的 HTML
+		const timeHighlightedMessage = updatedMessage.replace(
+			timeAgoText,
+			`<strong class="font-bold text-orange-800 dark:text-orange-200 bg-orange-100 dark:bg-orange-800/30 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-700">${timeAgoText}</strong>`
+		);
+		
+		messageElement.innerHTML = timeHighlightedMessage;
+	});
+}
+
+// 页面加载完成后执行
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', initExpirationWarnings);
+} else {
+	initExpirationWarnings();
+}
+
+// 处理页面导航 (SPA 路由)
+document.addEventListener('astro:page-load', initExpirationWarnings);
+</script>
