@@ -1,0 +1,35 @@
+---
+import Layout from "@layouts/Layout.astro";
+import "@styles/welcome.css";
+import ImageWrapper from "@components/misc/ImageWrapper.astro";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { Icon } from "astro-icon/components";
+import { profileConfig } from "@/config";
+---
+
+<Layout title={i18n(I18nKey.welcomeInfo)}>
+  <main class="welcome-container">
+    <h1 class="welcome-title">
+      <span class="welcome-icon">🚀</span>
+      {i18n(I18nKey.welcomeInfo)}
+    </h1>
+
+    <div class="profile-section">
+        <ImageWrapper src={profileConfig.avatar || ""} alt="Profile Image of the Author" class="profile-avatar"></ImageWrapper>
+        <h2 class="profile-name">{profileConfig.name}</h2>
+        <p class="profile-bio">{profileConfig.bio}</p>
+        <div class="profile-links">
+            {profileConfig.links.map(link => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={link.name} class="profile-link">
+                    <Icon name={link.icon} />
+                </a>
+            ))}
+        </div>
+    </div>
+
+    <a href="/posts/" class="welcome-button">{i18n(I18nKey.goToBlog)}</a>
+  </main>
+</Layout>
+
+

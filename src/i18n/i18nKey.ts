@@ -55,6 +55,10 @@ enum I18nKey {
 	// Expiration warning
 	expiredContentWarning = "expiredContentWarning",
 	expiredContentMessage = "expiredContentMessage",
+
+	// welcome page
+	welcomeInfo = "welcomeInfo",
+	goToBlog = "goToBlog",
 }
 
 export default I18nKey;

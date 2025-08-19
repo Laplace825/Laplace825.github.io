@@ -77,7 +77,7 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: tomlConfig.profile?.avatar || "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+	avatar: tomlConfig.profile?.avatar || "@/assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: tomlConfig.profile?.name || "Lorem Ipsum",
 	bio:
 		tomlConfig.profile?.bio ||

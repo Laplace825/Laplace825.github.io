@@ -61,4 +61,8 @@ export const en: Translation = {
 	[Key.expiredContentWarning]: "Content May Be Outdated",
 	[Key.expiredContentMessage]:
 		"This article was published {timeAgo} ago. The information contained in it may be outdated. Please pay attention to the timeliness of the article when reading.",
+
+	// welcome page
+	[Key.welcomeInfo]: "Welcome to My Blog",
+	[Key.goToBlog]: "Go to the main page",
 };

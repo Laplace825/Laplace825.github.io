@@ -60,4 +60,8 @@ export const zh_CN: Translation = {
 	[Key.expiredContentWarning]: "内容可能已过时",
 	[Key.expiredContentMessage]:
 		"这篇文章发布于 {timeAgo} 前，其中的信息可能已经过时。请在阅读时注意文章的时效性。",
+
+	// welcome page
+	[Key.welcomeInfo]: "欢迎来到我的博客",
+	[Key.goToBlog]: "前往主页",
 };
