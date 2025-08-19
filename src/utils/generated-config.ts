@@ -45,6 +45,11 @@ export const tomlConfig = {
     "bio": "「0」が過去で 「1」が未来. 🌟",
     "links": [
       {
+        "name": "Telegram",
+        "icon": "fa6-brands:telegram",
+        "url": "https://t.me/laplace_he"
+      },
+      {
         "name": "GitHub",
         "icon": "fa6-brands:github",
         "url": "https://github.com/laplace825"
