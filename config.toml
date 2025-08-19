@@ -58,10 +58,10 @@ avatar = "assets/images/avatar.png"  # Optional: Relative to the /src directory.
 name = "Laplace"
 bio = "「0」が過去で 「1」が未来. 🌟"  # Optional
 
-[[profile.links]]
-name = "Telegram"
-icon = "fa6-brands:telegram"  # Visit https://icones.js.org/ for icon codes
-url = "https://t.me/laplace_hachi"
+# [[profile.links]]
+# name = "Telegram"
+# icon = "fa6-brands:telegram"  # Visit https://icones.js.org/ for icon codes
+# url = "https://t.me/laplace_hachi"
 
 [[profile.links]]
 name = "GitHub"
