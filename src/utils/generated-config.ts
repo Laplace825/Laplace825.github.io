@@ -83,6 +83,12 @@ export const tomlConfig = {
         "description": "ENDsoft's Blog",
         "avatar": "https://r-ay.cn/images/cb254102-aa64-4051-af5f-77a325f14ff7.png",
         "url": "https://blog.r-ay.cn/"
+      },
+      {
+        "name": "Blueshootingstar",
+        "description": "後悔も未練も、消えるためにある！",
+        "avatar": "https://i.ibb.co/RfQtXqd/profile.png",
+        "url": "https://blueshootingstar.blog/"
       }
     ]
   }
