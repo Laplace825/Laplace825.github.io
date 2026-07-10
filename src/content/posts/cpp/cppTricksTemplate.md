@@ -82,7 +82,7 @@ auto lambdaTemplatePrint = [](Args... args) -> void {
 可以看出，这里的泛型直接使用`auto`作为占位，然而我们其实也能直接使用`template`。
 
 ## 制作一个判断迭代器是否存在的方法
-这个方法借鉴了[c++ 检查变量类型是否可迭代？]([c++ - 检查变量类型是否可迭代？_Stack Overflow中文网](https://stackoverflow.org.cn/questions/13830158)) ，十分巧妙。
+这个方法借鉴了[c++ 检查变量类型是否可迭代？](https://stackoverflow.org.cn/questions/13830158) ，十分巧妙。
 ```cpp
 template <typename T>
 
