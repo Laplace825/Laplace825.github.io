@@ -164,6 +164,7 @@ export default defineConfig({
 			external: ["@myriaddreamin/typst-ts-node-compiler"],
 		},
 		build: {
+			cssMinify: "esbuild",
 			rollupOptions: {
 				onwarn(warning, warn) {
 					// temporarily suppress this warning
