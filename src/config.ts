@@ -1,4 +1,5 @@
 import type {
+	BackgroundConfig,
 	ExpressiveCodeConfig,
 	LicenseConfig,
 	NavBarConfig,
@@ -115,4 +116,12 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 	// Note: Some styles (such as background color) are being overridden, see the astro.config.mjs file.
 	// Please select a dark theme, as this blog theme currently only supports dark background color
 	theme: tomlConfig.expressiveCode?.theme || "github-dark",
+};
+
+export const backgroundConfig: BackgroundConfig = {
+	enable: tomlConfig.background?.enable ?? true, // Master switch for the animated background
+	grid: tomlConfig.background?.grid ?? true, // Draw the interactive cross-lattice grid
+	gridSize: tomlConfig.background?.gridSize || 90, // Grid spacing in px
+	glow: tomlConfig.background?.glow ?? true, // Soft glow that follows the pointer
+	cursorTrail: tomlConfig.background?.cursorTrail ?? false, // Legacy DOM cursor-trail dots
 };

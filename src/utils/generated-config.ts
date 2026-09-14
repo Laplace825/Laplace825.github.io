@@ -66,6 +66,13 @@ export const tomlConfig = {
     "name": "CC BY-NC-SA 4.0",
     "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
   },
+  "background": {
+    "enable": true,
+    "grid": true,
+    "gridSize": 90,
+    "glow": true,
+    "cursorTrail": false
+  },
   "expressiveCode": {
     "theme": "catppuccin-mocha"
   },

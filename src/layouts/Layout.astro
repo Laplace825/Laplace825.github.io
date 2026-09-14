@@ -3,6 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+import BackgroundEffect from "@components/BackgroundEffect.astro";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
 import {
@@ -150,6 +151,7 @@ const bannerOffset =
 	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
 		  data-overlayscrollbars-initialize
 	>
+		<BackgroundEffect></BackgroundEffect>
 		<ConfigCarrier></ConfigCarrier>
 		<slot />
 
@@ -566,8 +568,9 @@ if (window.swup) {
 </script>
 
 <script>
+import { backgroundConfig } from "../config";
+
 // Cursor Trail Animation
-let trails = [];
 let mouseX = 0;
 let mouseY = 0;
 let isMoving = false;
@@ -608,6 +611,11 @@ function handleMouseMove(e: MouseEvent) {
 
 // Initialize cursor trail
 function initCursorTrail() {
+    // Disabled by default: these dots render above the text (z-index 9999) and
+    // fight with the canvas background. See [background].cursorTrail in config.toml.
+    if (!backgroundConfig.cursorTrail) {
+        return;
+    }
     // Only on desktop devices
     if (window.innerWidth > 768) {
         document.addEventListener('mousemove', handleMouseMove);

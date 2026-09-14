@@ -78,6 +78,14 @@ enable = true
 name = "CC BY-NC-SA 4.0"
 url = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 
+# Dynamic background (canvas layer rendered behind all content, so text is never affected)
+[background]
+enable = true          # Master switch for the animated background
+grid = true            # Draw the interactive cross-lattice grid
+gridSize = 90          # Grid spacing in px (90 matches the DeepSeek homepage hero)
+glow = true            # Soft glow that follows the pointer
+cursorTrail = false    # Legacy DOM cursor-trail dots. Drawn ON TOP of text (z-index 9999), so it is off by default
+
 [expressiveCode]
 # Note: Some styles (such as background color) are being overridden, see the astro.config.mjs file.
 # Please select a dark theme, as this blog theme currently only supports dark background color

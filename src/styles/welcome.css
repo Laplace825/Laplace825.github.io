@@ -4,12 +4,37 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    position: relative;
+    /* Keep the ::before vignette inside this element's own stacking context,
+       so it lands above the veil but below the text. */
+    isolation: isolate;
+    /* Translucent, so the interactive canvas background shows through and
+       stays pointer-reactive on the landing page. */
+    background: linear-gradient(-45deg,
+        rgba(238, 119, 82, 0.62),
+        rgba(231, 60, 126, 0.62),
+        rgba(35, 166, 213, 0.62),
+        rgba(35, 213, 171, 0.62));
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     color: white;
     text-align: center;
     padding: 2rem;
+}
+
+/* Soft vignette: darkens the centre where the copy sits so white text keeps its
+   contrast over the translucent veil, while the edges stay open for the canvas. */
+.welcome-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        rgba(0, 0, 0, 0.48) 0%,
+        rgba(0, 0, 0, 0.34) 45%,
+        rgba(0, 0, 0, 0.14) 75%,
+        rgba(0, 0, 0, 0) 100%);
 }
 
 @keyframes gradient {
@@ -49,7 +74,9 @@
 }
 
 .welcome-button {
-    background-color: rgba(255, 255, 255, 0.2);
+    /* Dark translucent fill rather than white: a white fill lightens the backdrop
+       and drops white-text contrast below WCAG AA on the light theme. */
+    background-color: rgba(0, 0, 0, 0.22);
     border: 2px solid white;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -62,7 +89,8 @@
 
 .welcome-button:hover {
     background-color: white;
-    color: #e73c7e;
+    /* Darkened from #e73c7e, which only reached 3.93:1 on the white hover fill. */
+    color: #c0245f;
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }

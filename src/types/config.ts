@@ -91,3 +91,11 @@ export type BlogPostData = {
 export type ExpressiveCodeConfig = {
 	theme: string;
 };
+
+export type BackgroundConfig = {
+	enable: boolean;
+	grid: boolean;
+	gridSize: number;
+	glow: boolean;
+	cursorTrail: boolean;
+};

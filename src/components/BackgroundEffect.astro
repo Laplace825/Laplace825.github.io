@@ -1,0 +1,438 @@
+---
+import { backgroundConfig } from "../config";
+
+const { enable } = backgroundConfig;
+---
+
+{enable && (
+	<div id="bg-effect" aria-hidden="true">
+		<canvas id="bg-fluid"></canvas>
+		<canvas id="bg-grid"></canvas>
+	</div>
+)}
+
+<style>
+	/*
+	 * Sits at z-index -1, i.e. on the same layer as body::before but later in the DOM,
+	 * so it paints above the page background yet below every block of page content.
+	 * Combined with pointer-events:none this guarantees the motion can never cover,
+	 * tint or steal clicks from foreground text.
+	 */
+	#bg-effect {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+		pointer-events: none;
+		/* Vertical fade, mirroring the DeepSeek homepage hero mask */
+		-webkit-mask-image: linear-gradient(
+			#000000fc 0%,
+			#000000e8 9%,
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			#000000fc 0%,
+			#000000e8 9%,
+			transparent 100%
+		);
+	}
+
+	#bg-effect canvas {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	#bg-fluid {
+		z-index: 0;
+	}
+
+	#bg-grid {
+		z-index: 1;
+	}
+
+	/* The grid is a pointer affordance only, so hide it where there is no fine pointer. */
+	@media (hover: none), (pointer: coarse) {
+		#bg-grid {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	import { backgroundConfig } from "../config";
+
+	const TAU = Math.PI * 2;
+	const DPR_MAX = 2;
+	const COLOR_LEVELS = 8;
+	/** Radius of the cursor falloff applied to the grid, in px. */
+	const REACT_RADIUS = 190;
+	/** Gap between a node and the start of its connector, as on the official site. */
+	const NODE_GAP = 10;
+
+	type Palette = {
+		blobs: string[];
+		glow: string;
+		lineRGB: [number, number, number];
+		lineAlpha: number;
+		lineBoost: number;
+		dotAlpha: number;
+		dotBoost: number;
+		composite: GlobalCompositeOperation;
+	};
+
+	/**
+	 * The site hue is an oklch hue set as a plain number on :root, so we read it
+	 * directly and build canvas colours with hsl() for maximum browser support.
+	 */
+	function readHue(): number {
+		const raw = getComputedStyle(document.documentElement).getPropertyValue(
+			"--hue",
+		);
+		const value = Number.parseFloat(raw);
+		return Number.isFinite(value) ? value : 250;
+	}
+
+	function makePalette(hue: number, dark: boolean): Palette {
+		if (dark) {
+			return {
+				blobs: [
+					`hsl(${hue} 85% 62% / 0.16)`,
+					`hsl(${(hue + 45) % 360} 80% 60% / 0.12)`,
+					`hsl(${(hue + 315) % 360} 78% 66% / 0.1)`,
+					`hsl(${(hue + 180) % 360} 70% 58% / 0.08)`,
+				],
+				glow: `hsl(${hue} 90% 70% / 0.22)`,
+				lineRGB: [150, 180, 235],
+				lineAlpha: 0.16,
+				lineBoost: 0.5,
+				dotAlpha: 0.3,
+				dotBoost: 0.55,
+				composite: "lighter",
+			};
+		}
+		return {
+			blobs: [
+				`hsl(${hue} 70% 62% / 0.1)`,
+				`hsl(${(hue + 45) % 360} 66% 62% / 0.08)`,
+				`hsl(${(hue + 315) % 360} 64% 64% / 0.07)`,
+				`hsl(${(hue + 180) % 360} 60% 60% / 0.05)`,
+			],
+			glow: `hsl(${hue} 80% 55% / 0.14)`,
+			lineRGB: [60, 100, 160],
+			lineAlpha: 0.13,
+			lineBoost: 0.45,
+			dotAlpha: 0.28,
+			dotBoost: 0.5,
+			composite: "source-over",
+		};
+	}
+
+	function initBackground(root: HTMLElement) {
+		const fluidEl = root.querySelector<HTMLCanvasElement>("#bg-fluid");
+		const gridEl = root.querySelector<HTMLCanvasElement>("#bg-grid");
+		if (!fluidEl || !gridEl) return;
+		const fluidCtxEl = fluidEl.getContext("2d");
+		const gridCtxEl = gridEl.getContext("2d");
+		if (!fluidCtxEl || !gridCtxEl) return;
+
+		// Explicitly non-nullable aliases: TypeScript does not carry the narrowing
+		// of the consts above into the nested functions declared below.
+		const fluidCanvas: HTMLCanvasElement = fluidEl;
+		const gridCanvas: HTMLCanvasElement = gridEl;
+		const fluidCtx: CanvasRenderingContext2D = fluidCtxEl;
+		const gridCtx: CanvasRenderingContext2D = gridCtxEl;
+
+		const wantGrid = backgroundConfig.grid;
+		const wantGlow = backgroundConfig.glow;
+		const gridSize = Math.max(40, backgroundConfig.gridSize || 90);
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+		const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+		let w = 0;
+		let h = 0;
+		let cols = 0;
+		let rows = 0;
+		let nodes = new Float32Array(0);
+		let nodeFalloff = new Float32Array(0);
+
+		let dark = document.documentElement.classList.contains("dark");
+		let hue = readHue();
+		let palette = makePalette(hue, dark);
+		let lineColors: string[] = [];
+		let dotColors: string[] = [];
+
+		let pointerActive = false;
+		let rawX = 0;
+		let rawY = 0;
+		let curX = 0;
+		let curY = 0;
+		let strength = 0;
+		let target = 0;
+		let raf = 0;
+
+		function buildColors() {
+			const [r, g, b] = palette.lineRGB;
+			lineColors = [];
+			dotColors = [];
+			for (let i = 0; i < COLOR_LEVELS; i++) {
+				const f = i / (COLOR_LEVELS - 1);
+				lineColors.push(
+					`rgba(${r},${g},${b},${(palette.lineAlpha + f * palette.lineBoost).toFixed(3)})`,
+				);
+				dotColors.push(
+					`rgba(${r},${g},${b},${(palette.dotAlpha + f * palette.dotBoost).toFixed(3)})`,
+				);
+			}
+		}
+
+		function buildNodes() {
+			cols = Math.max(2, Math.ceil(w / gridSize) + 1);
+			rows = Math.max(2, Math.ceil(h / gridSize) + 1);
+			const offsetX = (w - (cols - 1) * gridSize) / 2;
+			const offsetY = (h - (rows - 1) * gridSize) / 2;
+			nodes = new Float32Array(cols * rows * 2);
+			nodeFalloff = new Float32Array(cols * rows);
+			for (let r = 0; r < rows; r++) {
+				for (let c = 0; c < cols; c++) {
+					const i = r * cols + c;
+					nodes[i * 2] = offsetX + c * gridSize;
+					nodes[i * 2 + 1] = offsetY + r * gridSize;
+				}
+			}
+		}
+
+		function resize() {
+			w = window.innerWidth;
+			h = window.innerHeight;
+			const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
+			for (const canvas of [fluidCanvas, gridCanvas]) {
+				canvas.width = Math.round(w * dpr);
+				canvas.height = Math.round(h * dpr);
+			}
+			fluidCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			buildNodes();
+		}
+
+		/** Quadratic falloff from the eased pointer position, per grid node. */
+		function computeFalloff() {
+			const active = finePointer.matches && strength > 0.002;
+			for (let i = 0; i < nodeFalloff.length; i++) {
+				if (!active) {
+					nodeFalloff[i] = 0;
+					continue;
+				}
+				const dx = nodes[i * 2] - curX;
+				const dy = nodes[i * 2 + 1] - curY;
+				const d2 = dx * dx + dy * dy;
+				if (d2 >= REACT_RADIUS * REACT_RADIUS) {
+					nodeFalloff[i] = 0;
+					continue;
+				}
+				const t = 1 - Math.sqrt(d2) / REACT_RADIUS;
+				nodeFalloff[i] = t * t * strength;
+			}
+		}
+
+		function level(f: number): number {
+			const i = (f * (COLOR_LEVELS - 1) + 0.5) | 0;
+			return i < 0 ? 0 : i > COLOR_LEVELS - 1 ? COLOR_LEVELS - 1 : i;
+		}
+
+		/** 90px cross-lattice, identical geometry to the official homepage grid. */
+		function drawGrid() {
+			gridCtx.clearRect(0, 0, w, h);
+			if (!wantGrid || !finePointer.matches) return;
+
+			for (let r = 0; r < rows; r++) {
+				for (let c = 0; c < cols - 1; c++) {
+					const a = r * cols + c;
+					const b = a + 1;
+					const f = Math.max(nodeFalloff[a], nodeFalloff[b]);
+					gridCtx.strokeStyle = lineColors[level(f)];
+					gridCtx.lineWidth = 0.5 + f * 1.1;
+					gridCtx.beginPath();
+					gridCtx.moveTo(nodes[a * 2] + NODE_GAP, nodes[a * 2 + 1]);
+					gridCtx.lineTo(nodes[b * 2] - NODE_GAP, nodes[b * 2 + 1]);
+					gridCtx.stroke();
+				}
+			}
+
+			for (let c = 0; c < cols; c++) {
+				for (let r = 0; r < rows - 1; r++) {
+					const a = r * cols + c;
+					const b = a + cols;
+					const f = Math.max(nodeFalloff[a], nodeFalloff[b]);
+					gridCtx.strokeStyle = lineColors[level(f)];
+					gridCtx.lineWidth = 0.5 + f * 1.1;
+					gridCtx.beginPath();
+					gridCtx.moveTo(nodes[a * 2], nodes[a * 2 + 1] + NODE_GAP);
+					gridCtx.lineTo(nodes[b * 2], nodes[b * 2 + 1] - NODE_GAP);
+					gridCtx.stroke();
+				}
+			}
+
+			for (let i = 0; i < nodeFalloff.length; i++) {
+				const f = nodeFalloff[i];
+				gridCtx.beginPath();
+				gridCtx.arc(nodes[i * 2], nodes[i * 2 + 1], 1.8 + f * 3.2, 0, TAU);
+				gridCtx.fillStyle = dotColors[level(f)];
+				gridCtx.fill();
+			}
+		}
+
+		/** Slow ambient blobs, nudged towards the pointer, plus the pointer bloom. */
+		function drawFluid(t: number) {
+			fluidCtx.globalCompositeOperation = "source-over";
+			fluidCtx.clearRect(0, 0, w, h);
+			fluidCtx.globalCompositeOperation = palette.composite;
+
+			const reach = Math.max(w, h);
+			for (let i = 0; i < palette.blobs.length; i++) {
+				const phase = i * 1.7;
+				const speed = 0.00007 + i * 0.000021;
+				let bx = w * (0.18 + 0.21 * i) + Math.sin(t * speed + phase) * w * 0.15;
+				let by =
+					h * (0.24 + 0.17 * ((i * 2) % 3)) +
+					Math.cos(t * speed * 1.27 + phase) * h * 0.17;
+				bx += (curX - bx) * 0.05 * strength;
+				by += (curY - by) * 0.05 * strength;
+				const radius = reach * (0.32 + 0.05 * i);
+				const grad = fluidCtx.createRadialGradient(bx, by, 0, bx, by, radius);
+				grad.addColorStop(0, palette.blobs[i]);
+				grad.addColorStop(1, "rgba(0,0,0,0)");
+				fluidCtx.fillStyle = grad;
+				fluidCtx.fillRect(bx - radius, by - radius, radius * 2, radius * 2);
+			}
+
+			if (wantGlow && finePointer.matches && strength > 0.002) {
+				const radius = 280;
+				const grad = fluidCtx.createRadialGradient(
+					curX,
+					curY,
+					0,
+					curX,
+					curY,
+					radius,
+				);
+				grad.addColorStop(0, palette.glow);
+				grad.addColorStop(1, "rgba(0,0,0,0)");
+				fluidCtx.fillStyle = grad;
+				fluidCtx.fillRect(curX - radius, curY - radius, radius * 2, radius * 2);
+			}
+
+			fluidCtx.globalCompositeOperation = "source-over";
+		}
+
+		function render(t: number) {
+			computeFalloff();
+			drawFluid(t);
+			drawGrid();
+		}
+
+		function schedule() {
+			if (raf || document.hidden || reduceMotion.matches) return;
+			raf = requestAnimationFrame(frame);
+		}
+
+		function frame(t: number) {
+			raf = 0;
+			if (pointerActive) {
+				const dx = rawX - curX;
+				const dy = rawY - curY;
+				// Easing constants match the official cursor canvas.
+				const n = Math.hypot(dx, dy) < 50 ? 0.7 : 0.4;
+				curX += dx * n;
+				curY += dy * n;
+			}
+			strength += (target - strength) * 0.24;
+			if (!pointerActive && strength < 0.002) strength = 0;
+
+			render(t);
+			schedule();
+		}
+
+		function onPointerMove(e: PointerEvent) {
+			rawX = e.clientX;
+			rawY = e.clientY;
+			if (!pointerActive) {
+				// Avoid sliding in from a stale position on re-entry.
+				if (strength < 0.002) {
+					curX = rawX;
+					curY = rawY;
+				}
+				pointerActive = true;
+			}
+			target = 1;
+			schedule();
+		}
+
+		function onPointerLeave() {
+			pointerActive = false;
+			target = 0;
+			schedule();
+		}
+
+		buildColors();
+		resize();
+		curX = w / 2;
+		curY = h / 2;
+
+		if (reduceMotion.matches) {
+			render(0);
+		} else {
+			if (finePointer.matches) {
+				window.addEventListener("pointermove", onPointerMove, { passive: true });
+				window.addEventListener("pointerdown", onPointerMove, { passive: true });
+				document.addEventListener("pointerleave", onPointerLeave);
+				window.addEventListener("blur", onPointerLeave);
+			}
+			schedule();
+		}
+
+		window.addEventListener(
+			"resize",
+			() => {
+				resize();
+				if (reduceMotion.matches) render(0);
+			},
+			{ passive: true },
+		);
+
+		document.addEventListener("visibilitychange", () => {
+			if (document.hidden) {
+				if (raf) cancelAnimationFrame(raf);
+				raf = 0;
+			} else {
+				schedule();
+			}
+		});
+
+		// Repaint when the visitor switches light/dark mode or the theme hue changes.
+		const observer = new MutationObserver(() => {
+			const nextDark = document.documentElement.classList.contains("dark");
+			const nextHue = readHue();
+			if (nextDark === dark && nextHue === hue) return;
+			dark = nextDark;
+			hue = nextHue;
+			palette = makePalette(hue, dark);
+			buildColors();
+			if (reduceMotion.matches) render(0);
+			else schedule();
+		});
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class", "style"],
+		});
+	}
+
+	// Idempotent: the layer lives outside the Swup containers, so it survives navigation.
+	const root = document.getElementById("bg-effect");
+	if (root && root.dataset.ready !== "1") {
+		root.dataset.ready = "1";
+		initBackground(root);
+	}
+</script>
