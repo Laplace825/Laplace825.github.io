@@ -22,7 +22,7 @@ export const tomlConfig = {
     },
     "toc": {
       "enable": true,
-      "depth": 4
+      "depth": 3
     },
     "favicon": []
   },

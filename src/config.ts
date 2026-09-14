@@ -10,18 +10,23 @@ import type {
 import { tomlConfig } from "./utils/generated-config";
 
 /**
- * Validates and ensures the TOC depth value is within the allowed range
+ * Validates and ensures the TOC depth value is within the allowed range.
+ *
+ * The TOC component only styles three levels (minDepth, minDepth + 1 and
+ * minDepth + 2), so any number is clamped into 1..3. Out-of-range values used to
+ * fall back to 2 instead, which silently turned a configured `depth = 4` into
+ * the shallowest setting and hid every `###` entry from the table of contents.
+ *
  * @param value - The depth value to validate
  * @returns A valid depth value (1, 2, or 3)
  */
 function validateTocDepth(value: unknown): 1 | 2 | 3 {
-	if (
-		typeof value === "number" &&
-		(value === 1 || value === 2 || value === 3)
-	) {
-		return value;
+	const numeric = typeof value === "number" ? value : Number(value);
+	if (!Number.isFinite(numeric)) {
+		return 2; // Default to 2 if missing or not a number
 	}
-	return 2; // Default to 2 if invalid
+	const clamped = Math.min(3, Math.max(1, Math.round(numeric)));
+	return clamped as 1 | 2 | 3;
 }
 
 /**

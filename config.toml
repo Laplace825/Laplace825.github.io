@@ -23,7 +23,9 @@ url = ""  # Optional: URL link to the original artwork or artist's page
 
 [site.toc]
 enable = true  # Display the table of contents on the right side of the post
-depth = 4  # Maximum heading depth to show in the table, from 1 to 3
+depth = 3  # Levels to show in the table of contents, from 1 to 3. Set to 3 to
+           # include ### headings. (Was 4, which is out of range and was being
+           # silently coerced to 2, hiding every ### entry.)
 
 # Example favicon configurations (optional fields: theme, sizes)
 # Leave empty array to use default favicon
