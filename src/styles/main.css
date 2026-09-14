@@ -15,8 +15,8 @@
     background-image: var(--glass-sheen);
     outline: 1px solid var(--glass-border);
     outline-offset: -1px;
-    -webkit-backdrop-filter: blur(18px) saturate(175%);
-    backdrop-filter: blur(18px) saturate(175%);
+    -webkit-backdrop-filter: blur(20px) saturate(175%);
+    backdrop-filter: blur(20px) saturate(175%);
   }
   /* A soft drop shadow plus a 1px top rim: without them the pane reads as barely
      lighter than the page (light mode measured a shadow delta of only 0.19). */
