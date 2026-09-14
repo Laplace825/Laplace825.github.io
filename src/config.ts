@@ -128,6 +128,8 @@ export const backgroundConfig: BackgroundConfig = {
 	grid: tomlConfig.background?.grid ?? true, // Draw the interactive cross-lattice grid
 	gridSize: tomlConfig.background?.gridSize || 90, // Grid spacing in px
 	glow: tomlConfig.background?.glow ?? true, // Soft glow that follows the pointer
+	particles: tomlConfig.background?.particles ?? true, // Drifting twinkling glow motes
+	particleCount: tomlConfig.background?.particleCount || 100, // Count at a 1600x1000 viewport
 	blobs: tomlConfig.background?.blobs ?? false, // Multi-hue drifting colour blobs (breaks flat colour)
 	cursorTrail: tomlConfig.background?.cursorTrail ?? false, // Legacy DOM cursor-trail dots
 };

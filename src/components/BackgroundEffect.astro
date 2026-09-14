@@ -8,6 +8,7 @@ const { enable } = backgroundConfig;
 	<div id="bg-effect" aria-hidden="true">
 		<canvas id="bg-fluid"></canvas>
 		<canvas id="bg-grid"></canvas>
+		<canvas id="bg-particles"></canvas>
 	</div>
 )}
 
@@ -53,6 +54,10 @@ const { enable } = backgroundConfig;
 		z-index: 1;
 	}
 
+	#bg-particles {
+		z-index: 2;
+	}
+
 	/* The grid is a pointer affordance only, so hide it where there is no fine pointer. */
 	@media (hover: none), (pointer: coarse) {
 		#bg-grid {
@@ -71,6 +76,8 @@ const { enable } = backgroundConfig;
 	const REACT_RADIUS = 190;
 	/** Gap between a node and the start of its connector, as on the official site. */
 	const NODE_GAP = 10;
+	/** Size of the pre-rendered mote sprite, in px. */
+	const PARTICLE_SPRITE = 64;
 
 	type Palette = {
 		blobs: string[];
@@ -80,6 +87,8 @@ const { enable } = backgroundConfig;
 		lineBoost: number;
 		dotAlpha: number;
 		dotBoost: number;
+		particleAlpha: number;
+		particleComposite: GlobalCompositeOperation;
 		composite: GlobalCompositeOperation;
 	};
 
@@ -156,6 +165,9 @@ const { enable } = backgroundConfig;
 				lineBoost: 0.5,
 				dotAlpha: 0.3,
 				dotBoost: 0.55,
+				// Additive blending is what makes the motes read as light on a dark page.
+				particleAlpha: 0.55,
+				particleComposite: "lighter",
 				composite: "lighter",
 			};
 		}
@@ -172,6 +184,10 @@ const { enable } = backgroundConfig;
 			lineBoost: 0.45,
 			dotAlpha: 0.28,
 			dotBoost: 0.5,
+			// Additive light would just wash out on a light page, so the motes are
+			// painted as soft accent-coloured dots instead.
+			particleAlpha: 0.32,
+			particleComposite: "source-over",
 			composite: "source-over",
 		};
 	}
@@ -179,21 +195,27 @@ const { enable } = backgroundConfig;
 	function initBackground(root: HTMLElement) {
 		const fluidEl = root.querySelector<HTMLCanvasElement>("#bg-fluid");
 		const gridEl = root.querySelector<HTMLCanvasElement>("#bg-grid");
-		if (!fluidEl || !gridEl) return;
+		const particleEl = root.querySelector<HTMLCanvasElement>("#bg-particles");
+		if (!fluidEl || !gridEl || !particleEl) return;
 		const fluidCtxEl = fluidEl.getContext("2d");
 		const gridCtxEl = gridEl.getContext("2d");
-		if (!fluidCtxEl || !gridCtxEl) return;
+		const particleCtxEl = particleEl.getContext("2d");
+		if (!fluidCtxEl || !gridCtxEl || !particleCtxEl) return;
 
 		// Explicitly non-nullable aliases: TypeScript does not carry the narrowing
 		// of the consts above into the nested functions declared below.
 		const fluidCanvas: HTMLCanvasElement = fluidEl;
 		const gridCanvas: HTMLCanvasElement = gridEl;
+		const particleCanvas: HTMLCanvasElement = particleEl;
 		const fluidCtx: CanvasRenderingContext2D = fluidCtxEl;
 		const gridCtx: CanvasRenderingContext2D = gridCtxEl;
+		const particleCtx: CanvasRenderingContext2D = particleCtxEl;
 
 		const wantGrid = backgroundConfig.grid;
 		const wantGlow = backgroundConfig.glow;
 		const wantBlobs = backgroundConfig.blobs;
+		const wantParticles = backgroundConfig.particles;
+		const particleCount = Math.max(0, backgroundConfig.particleCount || 100);
 		const gridSize = Math.max(40, backgroundConfig.gridSize || 90);
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -210,6 +232,7 @@ const { enable } = backgroundConfig;
 		let palette = makePalette(hue, dark);
 		let lineColors: string[] = [];
 		let dotColors: string[] = [];
+		let particleSprite: HTMLCanvasElement | null = null;
 
 		let pointerActive = false;
 		let rawX = 0;
@@ -219,6 +242,67 @@ const { enable } = backgroundConfig;
 		let strength = 0;
 		let target = 0;
 		let raf = 0;
+		let lastFrameTime = 0;
+
+		type Particle = {
+			x: number;
+			y: number;
+			size: number;
+			vx: number;
+			vy: number;
+			phase: number;
+			rate: number;
+			wobble: number;
+		};
+
+		const particles: Particle[] = [];
+
+		/** particleCount is calibrated at a 1600x1000 viewport. */
+		function particleTargetCount(): number {
+			const scaled = Math.round(particleCount * ((w * h) / (1600 * 1000)));
+			return Math.max(12, Math.min(400, scaled));
+		}
+
+		function spawnParticle(anywhere: boolean): Particle {
+			const speed = 5 + Math.random() * 13; // px per second
+			const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2; // mostly rising
+			return {
+				x: Math.random() * w,
+				y: anywhere ? Math.random() * h : h + 8,
+				size: 0.7 + Math.random() * 1.6,
+				vx: Math.cos(angle) * speed,
+				vy: Math.sin(angle) * speed,
+				phase: Math.random() * TAU,
+				rate: 0.0006 + Math.random() * 0.0016, // radians per ms
+				wobble: 0.3 + Math.random() * 0.9,
+			};
+		}
+
+		function buildParticles() {
+			particles.length = 0;
+			const target = particleTargetCount();
+			for (let i = 0; i < target; i++) particles.push(spawnParticle(true));
+		}
+
+		/**
+		 * Each mote is pre-rendered once into a small sprite and then blitted, so the
+		 * frame loop never allocates a radial gradient per particle per frame.
+		 */
+		function buildParticleSprite(r: number, g: number, b: number) {
+			const sprite = document.createElement("canvas");
+			sprite.width = PARTICLE_SPRITE;
+			sprite.height = PARTICLE_SPRITE;
+			const ctx = sprite.getContext("2d");
+			if (!ctx) return null;
+			const centre = PARTICLE_SPRITE / 2;
+			const grad = ctx.createRadialGradient(centre, centre, 0, centre, centre, centre);
+			grad.addColorStop(0, `rgba(${r},${g},${b},1)`);
+			grad.addColorStop(0.25, `rgba(${r},${g},${b},0.5)`);
+			grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+			ctx.fillStyle = grad;
+			ctx.fillRect(0, 0, PARTICLE_SPRITE, PARTICLE_SPRITE);
+			return sprite;
+		}
 
 		function buildColors() {
 			const [r, g, b] = palette.lineRGB;
@@ -233,6 +317,7 @@ const { enable } = backgroundConfig;
 					`rgba(${r},${g},${b},${(palette.dotAlpha + f * palette.dotBoost).toFixed(3)})`,
 				);
 			}
+			particleSprite = buildParticleSprite(r, g, b);
 		}
 
 		function buildNodes() {
@@ -255,13 +340,15 @@ const { enable } = backgroundConfig;
 			w = window.innerWidth;
 			h = window.innerHeight;
 			const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
-			for (const canvas of [fluidCanvas, gridCanvas]) {
+			for (const canvas of [fluidCanvas, gridCanvas, particleCanvas]) {
 				canvas.width = Math.round(w * dpr);
 				canvas.height = Math.round(h * dpr);
 			}
 			fluidCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			particleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			buildNodes();
+			buildParticles();
 		}
 
 		/** Quadratic falloff from the eased pointer position, per grid node. */
@@ -380,10 +467,51 @@ const { enable } = backgroundConfig;
 			fluidCtx.globalCompositeOperation = "source-over";
 		}
 
-		function render(t: number) {
+		/**
+		 * Drifting, twinkling glow motes. Deliberately single-colour (the theme
+		 * accent), so they sparkle over the flat background without reintroducing
+		 * the multi-hue wash that the blobs used to create.
+		 */
+		function drawParticles(t: number, dt: number) {
+			particleCtx.clearRect(0, 0, w, h);
+			if (!wantParticles || !particleSprite) return;
+			particleCtx.globalCompositeOperation = palette.particleComposite;
+			const drift = t * 0.00035;
+			for (const p of particles) {
+				p.x += (p.vx + Math.sin(drift + p.phase) * p.wobble * 9) * dt;
+				p.y += (p.vy + Math.cos(drift * 1.3 + p.phase) * p.wobble * 6) * dt;
+
+				// Recycle off-screen motes on the opposite edge.
+				if (p.y < -12) {
+					p.y = h + 12;
+					p.x = Math.random() * w;
+				} else if (p.y > h + 12) {
+					p.y = -12;
+				}
+				if (p.x < -12) p.x = w + 12;
+				else if (p.x > w + 12) p.x = -12;
+
+				// Twinkle: a slow per-particle sine between a dim and a bright state.
+				const twinkle = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * p.rate + p.phase));
+				const size = p.size * PARTICLE_SPRITE * 0.42;
+				particleCtx.globalAlpha = twinkle * palette.particleAlpha;
+				particleCtx.drawImage(
+					particleSprite,
+					p.x - size / 2,
+					p.y - size / 2,
+					size,
+					size,
+				);
+			}
+			particleCtx.globalAlpha = 1;
+			particleCtx.globalCompositeOperation = "source-over";
+		}
+
+		function render(t: number, dt: number) {
 			computeFalloff();
 			drawFluid(t);
 			drawGrid();
+			drawParticles(t, dt);
 		}
 
 		function schedule() {
@@ -393,6 +521,9 @@ const { enable } = backgroundConfig;
 
 		function frame(t: number) {
 			raf = 0;
+			// Clamped so a backgrounded tab does not teleport the motes on resume.
+			const dt = lastFrameTime ? Math.min(0.05, (t - lastFrameTime) / 1000) : 0;
+			lastFrameTime = t;
 			if (pointerActive) {
 				const dx = rawX - curX;
 				const dy = rawY - curY;
@@ -404,7 +535,7 @@ const { enable } = backgroundConfig;
 			strength += (target - strength) * 0.24;
 			if (!pointerActive && strength < 0.002) strength = 0;
 
-			render(t);
+			render(t, dt);
 			schedule();
 		}
 
@@ -435,7 +566,7 @@ const { enable } = backgroundConfig;
 		curY = h / 2;
 
 		if (reduceMotion.matches) {
-			render(0);
+			render(0, 0);
 		} else {
 			if (finePointer.matches) {
 				window.addEventListener("pointermove", onPointerMove, { passive: true });
@@ -450,7 +581,7 @@ const { enable } = backgroundConfig;
 			"resize",
 			() => {
 				resize();
-				if (reduceMotion.matches) render(0);
+				if (reduceMotion.matches) render(0, 0);
 			},
 			{ passive: true },
 		);
@@ -473,7 +604,7 @@ const { enable } = backgroundConfig;
 			hue = nextHue;
 			palette = makePalette(hue, dark);
 			buildColors();
-			if (reduceMotion.matches) render(0);
+			if (reduceMotion.matches) render(0, 0);
 			else schedule();
 		});
 		observer.observe(document.documentElement, {
