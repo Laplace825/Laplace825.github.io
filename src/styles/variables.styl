@@ -8,6 +8,13 @@ black(a)
 rainbow-light = linear-gradient(to right, oklch(0.80 0.10 0), oklch(0.80 0.10 30), oklch(0.80 0.10 60), oklch(0.80 0.10 90), oklch(0.80 0.10 120), oklch(0.80 0.10 150), oklch(0.80 0.10 180), oklch(0.80 0.10 210), oklch(0.80 0.10 240), oklch(0.80 0.10 270), oklch(0.80 0.10 300), oklch(0.80 0.10 330), oklch(0.80 0.10 360))
 rainbow-dark = linear-gradient(to right, oklch(0.70 0.10 0), oklch(0.70 0.10 30), oklch(0.70 0.10 60), oklch(0.70 0.10 90), oklch(0.70 0.10 120), oklch(0.70 0.10 150), oklch(0.70 0.10 180), oklch(0.70 0.10 210), oklch(0.70 0.10 240), oklch(0.70 0.10 270), oklch(0.70 0.10 300), oklch(0.70 0.10 330), oklch(0.70 0.10 360))
 
+/* Frosted-glass sheen: a diagonal specular sweep drawn over the pane, which is
+   what makes it read as glass even when the backdrop behind it is flat.
+   Kept deliberately light in average opacity so the animated background still
+   transmits through the pane (see the note on --card-glass-bg below). */
+glass-sheen-light = linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 46%, rgba(255, 255, 255, 0.34) 100%)
+glass-sheen-dark = linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.015) 46%, rgba(255, 255, 255, 0.05) 100%)
+
 :root
   --radius-large 1rem
   --content-delay 150ms
@@ -79,8 +86,11 @@ define({
 
      Note: Stylus cannot parse `oklch(... / alpha)` (it tries to divide
      var(--hue)) or color-mix(), hence the rgba() helpers above. */
-  --card-glass-bg: white(0.62) black(0.45)
-  --glass-border: black(0.06) white(0.14)
+  --card-glass-bg: white(0.68) black(0.45)
+  --glass-border: black(0.1) white(0.14)
+  --glass-highlight: white(0.85) white(0.09)
+  --glass-shadow: rgba(2, 6, 23, 0.16) rgba(0, 0, 0, 0.55)
+  --glass-sheen: glass-sheen-light glass-sheen-dark
 
   --scrollbar-bg-light: black(0.4)
   --scrollbar-bg-hover-light: black(0.5)

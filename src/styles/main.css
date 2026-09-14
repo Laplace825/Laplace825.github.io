@@ -7,14 +7,24 @@
   /* Frosted-glass chrome: applied on top of .card-base by the navbar, the
      sidebar widgets and Profile. Translucent + blurred so the animated canvas
      background shows through, while content cards stay opaque.
-     `outline` is used for the hairline instead of `border`/`box-shadow` so no
-     layout geometry changes and existing shadows (e.g. .float-panel) survive. */
+     `outline` is used for the hairline instead of `border` so no layout geometry
+     changes; the depth shadow is a separate rule because .float-panel already
+     carries Tailwind's shadow-xl. */
   .card-base.card-glass {
     background-color: var(--card-glass-bg);
+    background-image: var(--glass-sheen);
     outline: 1px solid var(--glass-border);
     outline-offset: -1px;
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(175%);
+    backdrop-filter: blur(18px) saturate(175%);
+  }
+  /* A soft drop shadow plus a 1px top rim: without them the pane reads as barely
+     lighter than the page (light mode measured a shadow delta of only 0.19). */
+  .card-base.card-glass:not(.float-panel) {
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 10px 30px -12px var(--glass-shadow),
+      0 2px 8px -2px var(--glass-shadow);
   }
   h1,
   h2,
@@ -52,8 +62,9 @@
   }
   .float-panel {
     @apply top-[5.25rem] rounded-[var(--radius-large)] overflow-hidden bg-[var(--float-panel-bg)] transition shadow-xl dark:shadow-none;
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    backdrop-filter: blur(14px) saturate(160%);
+    background-image: var(--glass-sheen);
+    -webkit-backdrop-filter: blur(18px) saturate(175%);
+    backdrop-filter: blur(18px) saturate(175%);
   }
   .float-panel-closed {
     @apply -translate-y-1 opacity-0 pointer-events-none;
