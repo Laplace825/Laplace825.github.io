@@ -199,14 +199,10 @@ body::before {
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: linear-gradient(
-    45deg,
-    var(--page-bg) 0%,
-    color-mix(in oklch, var(--page-bg), oklch(0.98 0.005 var(--hue)) 70%) 25%,
-    color-mix(in oklch, var(--page-bg), oklch(0.96 0.01 var(--hue)) 50%) 10%,
-    color-mix(in oklch, var(--page-bg), oklch(0.97 0.008 var(--hue)) 30%) 35%,
-    var(--page-bg) 100%
-  );
+  /* Flat solid colour. This used to be a 45deg five-stop color-mix() gradient
+     whose stops were out of order (0%, 25%, 10%, 35%, 100%), which produced a
+     visible diagonal seam and made the page background non-uniform. */
+  background: var(--page-bg);
   pointer-events: none;
 }
 

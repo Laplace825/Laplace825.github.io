@@ -84,6 +84,9 @@ enable = true          # Master switch for the animated background
 grid = true            # Draw the interactive cross-lattice grid
 gridSize = 90          # Grid spacing in px (90 matches the DeepSeek homepage hero)
 glow = true            # Soft glow that follows the pointer
+blobs = false          # Four huge drifting colour blobs (base hue, +45, +315, +180). They blend
+                       # several hues together, so they break the flat solid background. Set true
+                       # to bring the colour wash back
 cursorTrail = false    # Legacy DOM cursor-trail dots. Drawn ON TOP of text (z-index 9999), so it is off by default
 
 [expressiveCode]

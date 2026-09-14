@@ -147,6 +147,7 @@ const { enable } = backgroundConfig;
 
 		const wantGrid = backgroundConfig.grid;
 		const wantGlow = backgroundConfig.glow;
+		const wantBlobs = backgroundConfig.blobs;
 		const gridSize = Math.max(40, backgroundConfig.gridSize || 90);
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -284,28 +285,34 @@ const { enable } = backgroundConfig;
 			}
 		}
 
-		/** Slow ambient blobs, nudged towards the pointer, plus the pointer bloom. */
+		/**
+		 * Optional multi-hue drifting blobs, plus the pointer bloom.
+		 * With `blobs` off (the default) this layer only ever draws the bloom, so
+		 * the page background stays a single flat colour.
+		 */
 		function drawFluid(t: number) {
 			fluidCtx.globalCompositeOperation = "source-over";
 			fluidCtx.clearRect(0, 0, w, h);
 			fluidCtx.globalCompositeOperation = palette.composite;
 
-			const reach = Math.max(w, h);
-			for (let i = 0; i < palette.blobs.length; i++) {
-				const phase = i * 1.7;
-				const speed = 0.00007 + i * 0.000021;
-				let bx = w * (0.18 + 0.21 * i) + Math.sin(t * speed + phase) * w * 0.15;
-				let by =
-					h * (0.24 + 0.17 * ((i * 2) % 3)) +
-					Math.cos(t * speed * 1.27 + phase) * h * 0.17;
-				bx += (curX - bx) * 0.05 * strength;
-				by += (curY - by) * 0.05 * strength;
-				const radius = reach * (0.32 + 0.05 * i);
-				const grad = fluidCtx.createRadialGradient(bx, by, 0, bx, by, radius);
-				grad.addColorStop(0, palette.blobs[i]);
-				grad.addColorStop(1, "rgba(0,0,0,0)");
-				fluidCtx.fillStyle = grad;
-				fluidCtx.fillRect(bx - radius, by - radius, radius * 2, radius * 2);
+			if (wantBlobs) {
+				const reach = Math.max(w, h);
+				for (let i = 0; i < palette.blobs.length; i++) {
+					const phase = i * 1.7;
+					const speed = 0.00007 + i * 0.000021;
+					let bx = w * (0.18 + 0.21 * i) + Math.sin(t * speed + phase) * w * 0.15;
+					let by =
+						h * (0.24 + 0.17 * ((i * 2) % 3)) +
+						Math.cos(t * speed * 1.27 + phase) * h * 0.17;
+					bx += (curX - bx) * 0.05 * strength;
+					by += (curY - by) * 0.05 * strength;
+					const radius = reach * (0.32 + 0.05 * i);
+					const grad = fluidCtx.createRadialGradient(bx, by, 0, bx, by, radius);
+					grad.addColorStop(0, palette.blobs[i]);
+					grad.addColorStop(1, "rgba(0,0,0,0)");
+					fluidCtx.fillStyle = grad;
+					fluidCtx.fillRect(bx - radius, by - radius, radius * 2, radius * 2);
+				}
 			}
 
 			if (wantGlow && finePointer.matches && strength > 0.002) {

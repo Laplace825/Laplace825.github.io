@@ -97,5 +97,6 @@ export type BackgroundConfig = {
 	grid: boolean;
 	gridSize: number;
 	glow: boolean;
+	blobs: boolean;
 	cursorTrail: boolean;
 };

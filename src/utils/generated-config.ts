@@ -71,6 +71,7 @@ export const tomlConfig = {
     "grid": true,
     "gridSize": 90,
     "glow": true,
+    "blobs": false,
     "cursorTrail": false
   },
   "expressiveCode": {
