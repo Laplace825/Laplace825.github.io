@@ -65,7 +65,22 @@ define({
   --link-hover: oklch(0.95 0.025 var(--hue)) oklch(0.40 0.08 var(--hue))
   --link-active: oklch(0.90 0.05 var(--hue)) oklch(0.35 0.07 var(--hue))
 
-  --float-panel-bg: white oklch(0.19 0.015 var(--hue))
+  --float-panel-bg: white(0.75) white(0.12)
+
+  /* Frosted-glass chrome: the navbar, the sidebar widgets and the floating
+     panels. Content cards (post body, lists, about, friends, archive) keep the
+     opaque --card-bg, so long-form reading is unaffected.
+
+     Dark mode uses a dark veil rather than a white one: the canvas is luminous
+     under additive blending, so `white(0.1)` washed the panels out and dropped
+     muted text (the profile bio) from 6.96:1 to 2.40:1. `black(0.45)` keeps the
+     panel darker than the page so muted text stays legible, while the canvas
+     still shows through at 55%.
+
+     Note: Stylus cannot parse `oklch(... / alpha)` (it tries to divide
+     var(--hue)) or color-mix(), hence the rgba() helpers above. */
+  --card-glass-bg: white(0.62) black(0.45)
+  --glass-border: black(0.06) white(0.14)
 
   --scrollbar-bg-light: black(0.4)
   --scrollbar-bg-hover-light: black(0.5)
