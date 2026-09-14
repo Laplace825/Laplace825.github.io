@@ -84,8 +84,8 @@ const { enable } = backgroundConfig;
 	};
 
 	/**
-	 * The site hue is an oklch hue set as a plain number on :root, so we read it
-	 * directly and build canvas colours with hsl() for maximum browser support.
+	 * The site hue is an oklch hue, set as a plain number on :root by the theme
+	 * colour picker.
 	 */
 	function readHue(): number {
 		const raw = getComputedStyle(document.documentElement).getPropertyValue(
@@ -95,7 +95,53 @@ const { enable } = backgroundConfig;
 		return Number.isFinite(value) ? value : 250;
 	}
 
+	// A 1x1 offscreen canvas, used to convert any CSS colour (including the
+	// theme's oklch accent) into the sRGB bytes a 2d context can draw.
+	const probe = document.createElement("canvas");
+	probe.width = 1;
+	probe.height = 1;
+	const probeCtx = probe.getContext("2d", { willReadFrequently: true });
+	const SENTINEL = "#ff00ff";
+
+	/**
+	 * A 2d context silently ignores a fillStyle it cannot parse, so a sentinel
+	 * colour is painted first to detect rejection and let the caller fall back.
+	 */
+	function resolveCSSColor(cssColor: string): [number, number, number] | null {
+		if (!probeCtx || !cssColor) return null;
+		probeCtx.fillStyle = SENTINEL;
+		probeCtx.fillStyle = cssColor;
+		probeCtx.clearRect(0, 0, 1, 1);
+		probeCtx.fillRect(0, 0, 1, 1);
+		const data = probeCtx.getImageData(0, 0, 1, 1).data;
+		if (data[3] === 0) return null;
+		if (data[0] === 255 && data[1] === 0 && data[2] === 255) return null;
+		return [data[0], data[1], data[2]];
+	}
+
+	/**
+	 * The theme accent colour (--primary, itself built from --hue), so the grid
+	 * and the pointer glow follow the theme colour picker instead of a hard-coded
+	 * blue that only matched the default hue of 250.
+	 *
+	 * Note the accent is an oklch colour, whose hue is not the same number as the
+	 * equivalent hsl() hue (oklch hue 250 resolves to about hsl hue 209), which is
+	 * why the glow is derived from the accent rather than from `hsl(var(--hue))`.
+	 */
+	function accentRGB(hue: number, dark: boolean): [number, number, number] {
+		const primary = getComputedStyle(document.documentElement)
+			.getPropertyValue("--primary")
+			.trim();
+		return (
+			resolveCSSColor(primary) ??
+			resolveCSSColor(`hsl(${hue} ${dark ? 60 : 55}% ${dark ? 72 : 48}%)`) ??
+			[128, 128, 128]
+		);
+	}
+
 	function makePalette(hue: number, dark: boolean): Palette {
+		const accent = accentRGB(hue, dark);
+		const [accentR, accentG, accentB] = accent;
 		if (dark) {
 			return {
 				blobs: [
@@ -104,8 +150,8 @@ const { enable } = backgroundConfig;
 					`hsl(${(hue + 315) % 360} 78% 66% / 0.1)`,
 					`hsl(${(hue + 180) % 360} 70% 58% / 0.08)`,
 				],
-				glow: `hsl(${hue} 90% 70% / 0.22)`,
-				lineRGB: [150, 180, 235],
+				glow: `rgba(${accentR},${accentG},${accentB},0.24)`,
+				lineRGB: accent,
 				lineAlpha: 0.16,
 				lineBoost: 0.5,
 				dotAlpha: 0.3,
@@ -120,8 +166,8 @@ const { enable } = backgroundConfig;
 				`hsl(${(hue + 315) % 360} 64% 64% / 0.07)`,
 				`hsl(${(hue + 180) % 360} 60% 60% / 0.05)`,
 			],
-			glow: `hsl(${hue} 80% 55% / 0.14)`,
-			lineRGB: [60, 100, 160],
+			glow: `rgba(${accentR},${accentG},${accentB},0.16)`,
+			lineRGB: accent,
 			lineAlpha: 0.13,
 			lineBoost: 0.45,
 			dotAlpha: 0.28,
