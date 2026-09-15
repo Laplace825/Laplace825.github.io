@@ -26,6 +26,25 @@
       0 10px 30px -12px var(--glass-shadow),
       0 2px 8px -2px var(--glass-shadow);
   }
+  /* Reading-surface glass, used by the post body card. Same material as the
+     chrome but tuned for long-form copy: a much higher opacity, so only about a
+     fifth of the backdrop shows through.
+     Deliberately NO backdrop-filter. Measured on this card, blur(12px) cost 46%
+     of the frame rate (21.5 fps vs 39.5 fps with it off) because it re-blurs the
+     whole card every frame while the background canvas animates - and since it is
+     the largest element on the page that is the worst place to pay for it. At
+     this opacity only ~15-18% of the backdrop is visible and that backdrop is a
+     flat colour, so the blur was buying nothing anyway. */
+  .card-base.card-glass-read {
+    background-color: var(--card-glass-read-bg);
+    background-image: var(--glass-sheen-read);
+    outline: 1px solid var(--glass-border);
+    outline-offset: -1px;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 10px 30px -12px var(--glass-shadow),
+      0 2px 8px -2px var(--glass-shadow);
+  }
   h1,
   h2,
   h3,
