@@ -192,20 +192,3 @@
         margin: 1em 0;
     } */
 }
-
-/*
- * Reading measure. Before this the text column filled the 960px card, which
- * measured 60 Chinese characters and 123 Latin characters per line - both well
- * past the comfortable range (roughly 35-45 CJK, 45-75 Latin), and these posts
- * are about three quarters Chinese.
- *
- * Only text blocks are capped: code blocks and tables keep the full card width,
- * since they need it (and the code frames read as deliberate full-bleed blocks).
- * Images cannot be excluded - they are written inline at the end of a text
- * paragraph - so they narrow with their paragraph; the PhotoSwipe lightbox
- * still opens them at full size on click.
- */
-.markdown-content :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
-  max-width: var(--content-measure);
-  margin-inline: auto;
-}
