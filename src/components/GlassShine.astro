@@ -1,0 +1,131 @@
+---
+// Liquid "feel" for the frosted chrome, without refraction.
+//
+// Deliberately NOT using `backdrop-filter: url(#svgFilter)`: refraction is
+// Chromium-only, and more importantly it is geometrically invisible over this
+// site's background - displacing a flat colour returns the same colour, so it
+// would only show where something structured sits behind the pane.
+//
+// Instead this adds the cues that read as "liquid" on any background and in
+// every browser: a specular highlight that tracks the pointer, a rim that warms
+// on hover, and a springy press. Renders no markup. Delete the element from
+// Layout.astro to switch the whole effect off.
+---
+
+<style is:global>
+	/*
+	 * The highlight is a ::before at z-index -1, i.e. inside the glass but behind
+	 * the pane's text, so it never tints the copy. The panes already form a
+	 * stacking context via backdrop-filter; `isolation` makes that explicit so the
+	 * negative z-index cannot escape if the blur is ever removed.
+	 */
+	.card-base.card-glass {
+		position: relative;
+		isolation: isolate;
+	}
+
+	.card-base.card-glass::before,
+	.float-panel::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+		/* Tinted with the theme accent rather than white: a white highlight is
+		   invisible on the near-white light-mode pane.
+		   The `transparent 86%` figure is the strength knob: it leaves the accent at
+		   14% alpha at the centre of the glow. At 78% (22% alpha) the pane under the
+		   cursor measured 86 RGB units brighter than when unlit; 86% lands around
+		   half that, a sheen rather than a spotlight. */
+		background: radial-gradient(
+			240px circle at var(--glass-mx, 50%) var(--glass-my, 0%),
+			color-mix(in oklch, var(--primary), transparent 86%) 0%,
+			transparent 70%
+		);
+	}
+
+	/* The rim catches the light as the pane is hovered. */
+	.card-base.card-glass {
+		transition: outline-color 0.3s ease;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.card-base.card-glass:hover::before,
+		.float-panel:hover::before {
+			opacity: 1;
+		}
+
+		.card-base.card-glass:hover {
+			outline-color: color-mix(in oklch, var(--primary), transparent 55%);
+		}
+	}
+
+	/*
+	 * Springy press. Putting the overshoot on transform only means a press squishes
+	 * slightly past its target and a release bounces once before settling, while
+	 * the colour transitions keep their normal easing. The press already scales via
+	 * Tailwind's `active:scale-*`; this only changes how it settles.
+	 */
+	.btn-plain,
+	.btn-regular,
+	.btn-card {
+		transition:
+			transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+			color 0.15s ease,
+			background-color 0.15s ease,
+			border-color 0.15s ease;
+	}
+</style>
+
+<script>
+	const FINE_POINTER = "(hover: hover) and (pointer: fine)";
+
+	function initGlassShine() {
+		if (document.documentElement.dataset.glassShine === "1") return;
+		document.documentElement.dataset.glassShine = "1";
+
+		const finePointer = window.matchMedia(FINE_POINTER);
+		if (!finePointer.matches) return;
+
+		let frame = 0;
+		let target: HTMLElement | null = null;
+		let clientX = 0;
+		let clientY = 0;
+
+		function apply() {
+			frame = 0;
+			if (!target) return;
+			const rect = target.getBoundingClientRect();
+			if (!rect.width || !rect.height) return;
+			target.style.setProperty(
+				"--glass-mx",
+				`${(((clientX - rect.left) / rect.width) * 100).toFixed(2)}%`,
+			);
+			target.style.setProperty(
+				"--glass-my",
+				`${(((clientY - rect.top) / rect.height) * 100).toFixed(2)}%`,
+			);
+		}
+
+		// One delegated listener, coalesced into a frame, so no per-pane handlers.
+		document.addEventListener(
+			"pointermove",
+			(event) => {
+				const node = event.target;
+				if (!(node instanceof Element)) return;
+				const pane = node.closest(".card-glass, .float-panel");
+				if (!(pane instanceof HTMLElement)) return;
+				target = pane;
+				clientX = event.clientX;
+				clientY = event.clientY;
+				if (!frame) frame = requestAnimationFrame(apply);
+			},
+			{ passive: true },
+		);
+	}
+
+	initGlassShine();
+</script>
