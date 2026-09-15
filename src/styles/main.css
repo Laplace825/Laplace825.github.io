@@ -278,3 +278,42 @@ button:hover .cursor-trail,
     transparent 100%
   );
 }
+
+/* ---------------------------------------------------------------------------
+ * Accessibility
+ * ------------------------------------------------------------------------- */
+
+/*
+ * Honour the OS "reduce motion" setting site-wide. The canvas background
+ * already checks this in JS; this covers every CSS animation and transition,
+ * which were previously all unguarded: the landing page's 15s looping rainbow
+ * and waving emoji, the Swup page transitions and the onload entrance
+ * animations. Durations are collapsed rather than removed so that
+ * `animationend` still fires for the listeners that depend on it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * A themed keyboard focus ring. The site had no :focus-visible styling at all,
+ * so it relied on the browser default, which clashes with the theme and gets
+ * clipped by the rounded, overflow-hidden cards.
+ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

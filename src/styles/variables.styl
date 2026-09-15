@@ -19,6 +19,10 @@ glass-sheen-dark = linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(25
 :root
   --radius-large 1rem
   --content-delay 150ms
+  /* Text column width for prose. 42rem puts Chinese body copy at roughly 42
+     characters per line (~86 for Latin), inside the comfortable range; before
+     this it ran to 60 and 123 characters in a 960px column. */
+  --content-measure 42rem
 
 /* An util to define variables that vary with light and dark mode */
 define(vars)
@@ -92,6 +96,11 @@ define({
   --glass-highlight: white(0.85) white(0.09)
   --glass-shadow: rgba(2, 6, 23, 0.16) rgba(0, 0, 0, 0.55)
   --glass-sheen: glass-sheen-light glass-sheen-dark
+
+  /* Keyboard focus ring. Light mode needs a darker accent than --primary: the
+     accent only reaches 2.3:1 against the light page background, below the 3:1
+     a focus indicator requires, whereas this reaches 4.2:1. */
+  --focus-ring: oklch(0.55 0.14 var(--hue)) oklch(0.75 0.14 var(--hue))
 
   --scrollbar-bg-light: black(0.4)
   --scrollbar-bg-hover-light: black(0.5)
