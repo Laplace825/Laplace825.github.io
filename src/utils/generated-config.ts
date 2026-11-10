@@ -68,12 +68,7 @@ export const tomlConfig = {
   },
   "background": {
     "enable": true,
-    "grid": true,
-    "gridSize": 90,
-    "glow": true,
-    "particles": true,
     "particleCount": 100,
-    "blobs": false,
     "cursorTrail": false
   },
   "expressiveCode": {

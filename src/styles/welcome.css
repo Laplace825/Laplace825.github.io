@@ -5,48 +5,9 @@
     justify-content: center;
     height: 100vh;
     position: relative;
-    /* Keep the ::before vignette inside this element's own stacking context,
-       so it lands above the veil but below the text. */
-    isolation: isolate;
-    /* Translucent, so the interactive canvas background shows through and
-       stays pointer-reactive on the landing page. */
-    background: linear-gradient(-45deg,
-        rgba(238, 119, 82, 0.62),
-        rgba(231, 60, 126, 0.62),
-        rgba(35, 166, 213, 0.62),
-        rgba(35, 213, 171, 0.62));
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-    color: white;
+    color: var(--btn-content);
     text-align: center;
     padding: 2rem;
-}
-
-/* Soft vignette: darkens the centre where the copy sits so white text keeps its
-   contrast over the translucent veil, while the edges stay open for the canvas. */
-.welcome-container::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(ellipse at center,
-        rgba(0, 0, 0, 0.48) 0%,
-        rgba(0, 0, 0, 0.34) 45%,
-        rgba(0, 0, 0, 0.14) 75%,
-        rgba(0, 0, 0, 0) 100%);
-}
-
-@keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
 }
 
 .welcome-title {
@@ -56,7 +17,6 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .welcome-icon {
@@ -74,11 +34,9 @@
 }
 
 .welcome-button {
-    /* Dark translucent fill rather than white: a white fill lightens the backdrop
-       and drops white-text contrast below WCAG AA on the light theme. */
-    background-color: rgba(0, 0, 0, 0.22);
-    border: 2px solid white;
-    color: white;
+    background-color: var(--btn-regular-bg);
+    border: 2px solid var(--btn-content);
+    color: var(--btn-content);
     padding: 0.75rem 1.5rem;
     border-radius: 9999px;
     font-size: 1.1rem;
@@ -88,9 +46,8 @@
 }
 
 .welcome-button:hover {
-    background-color: white;
-    /* Darkened from #e73c7e, which only reached 3.93:1 on the white hover fill. */
-    color: #c0245f;
+    background-color: var(--btn-regular-bg-hover);
+    color: var(--btn-content);
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
@@ -99,20 +56,20 @@
     margin-top: 2rem;
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--card-glass-bg);
     border-radius: 1rem;
     max-width: 400px;
     width: 100%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-border);
 }
 
 .profile-avatar {
     width: 200px;
     height: 200px;
     border-radius: 50%;
-    border: 3px solid white;
+    border: 3px solid var(--btn-content);
     margin: 0 auto 1rem;
     display: block;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -139,12 +96,12 @@
 }
 
 .profile-link {
-    color: white;
+    color: inherit;
     font-size: 1.75rem;
     transition: all 0.3s ease;
 }
 
 .profile-link:hover {
     transform: scale(1.2);
-    color: #23d5ab;
+    color: var(--primary);
 }

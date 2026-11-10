@@ -81,8 +81,7 @@ define({
   --float-panel-bg: white(0.75) white(0.12)
 
   /* Frosted-glass chrome: the navbar, the sidebar widgets and the floating
-     panels. Content cards (post body, lists, about, friends, archive) keep the
-     opaque --card-bg, so long-form reading is unaffected.
+     panels use a more translucent treatment than the content cards.
 
      Dark mode uses a dark veil rather than a white one: the canvas is luminous
      under additive blending, so `white(0.1)` washed the panels out and dropped
@@ -98,14 +97,9 @@ define({
   --glass-shadow: rgba(2, 6, 23, 0.16) rgba(0, 0, 0, 0.55)
   --glass-sheen: glass-sheen-light glass-sheen-dark
 
-  /* Reading-surface glass (the post body card). Far more opaque than the chrome
-     panes on purpose: this is where the copy lives, so legibility wins. Dark mode
-     is the binding constraint - its particles are drawn additively, so they bleed
-     through a translucent pane far more than in light mode, which measured a
-     backdrop shift of up to 16 units behind the text at 70%. At 85% that drops to
-     a few units, i.e. below the point where a moving mote is noticeable while
-     reading. */
-  --card-glass-read-bg: white(0.82) black(0.85)
+  /* Content cards retain a mostly opaque surface for reading while allowing
+     about a quarter of the orbital background to show through. */
+  --card-glass-read-bg: white(0.74) black(0.76)
   --glass-sheen-read: glass-sheen-read-light glass-sheen-read-dark
 
   /* Keyboard focus ring. Light mode needs a darker accent than --primary: the

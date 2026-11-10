@@ -2,11 +2,12 @@
 
 @layer components {
   .card-base {
-    @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition;
+    @apply rounded-[var(--radius-large)] overflow-hidden transition;
+    background-color: var(--card-glass-read-bg);
   }
   /* Frosted-glass chrome: applied on top of .card-base by the navbar, the
-     sidebar widgets and Profile. Translucent + blurred so the animated canvas
-     background shows through, while content cards stay opaque.
+     sidebar widgets and Profile. These panes are more translucent and blurred
+     than the content cards.
      `outline` is used for the hairline instead of `border` so no layout geometry
      changes; the depth shadow is a separate rule because .float-panel already
      carries Tailwind's shadow-xl. */
@@ -26,15 +27,9 @@
       0 10px 30px -12px var(--glass-shadow),
       0 2px 8px -2px var(--glass-shadow);
   }
-  /* Reading-surface glass, used by the post body card. Same material as the
-     chrome but tuned for long-form copy: a much higher opacity, so only about a
-     fifth of the backdrop shows through.
-     Deliberately NO backdrop-filter. Measured on this card, blur(12px) cost 46%
-     of the frame rate (21.5 fps vs 39.5 fps with it off) because it re-blurs the
-     whole card every frame while the background canvas animates - and since it is
-     the largest element on the page that is the worst place to pay for it. At
-     this opacity only ~15-18% of the backdrop is visible and that backdrop is a
-     flat colour, so the blur was buying nothing anyway. */
+  /* The reading surface uses the same translucent fill as other content cards,
+     with a quieter sheen for long-form copy. No backdrop-filter: re-blurring the
+     largest card on every background frame is unnecessarily expensive. */
   .card-base.card-glass-read {
     background-color: var(--card-glass-read-bg);
     background-image: var(--glass-sheen-read);

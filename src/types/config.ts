@@ -94,11 +94,6 @@ export type ExpressiveCodeConfig = {
 
 export type BackgroundConfig = {
 	enable: boolean;
-	grid: boolean;
-	gridSize: number;
-	glow: boolean;
-	particles: boolean;
 	particleCount: number;
-	blobs: boolean;
 	cursorTrail: boolean;
 };

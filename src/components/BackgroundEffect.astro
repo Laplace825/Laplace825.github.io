@@ -6,63 +6,23 @@ const { enable } = backgroundConfig;
 
 {enable && (
 	<div id="bg-effect" aria-hidden="true">
-		<canvas id="bg-fluid"></canvas>
-		<canvas id="bg-grid"></canvas>
-		<canvas id="bg-particles"></canvas>
+		<canvas id="bg-planets"></canvas>
 	</div>
 )}
 
 <style>
-	/*
-	 * Sits at z-index -1, i.e. on the same layer as body::before but later in the DOM,
-	 * so it paints above the page background yet below every block of page content.
-	 * Combined with pointer-events:none this guarantees the motion can never cover,
-	 * tint or steal clicks from foreground text.
-	 */
 	#bg-effect {
 		position: fixed;
 		inset: 0;
 		z-index: -1;
 		overflow: hidden;
 		pointer-events: none;
-		/* Vertical fade, mirroring the DeepSeek homepage hero mask */
-		-webkit-mask-image: linear-gradient(
-			#000000fc 0%,
-			#000000e8 9%,
-			transparent 100%
-		);
-		mask-image: linear-gradient(
-			#000000fc 0%,
-			#000000e8 9%,
-			transparent 100%
-		);
 	}
 
-	#bg-effect canvas {
-		position: absolute;
-		inset: 0;
+	#bg-planets {
 		display: block;
 		width: 100%;
 		height: 100%;
-	}
-
-	#bg-fluid {
-		z-index: 0;
-	}
-
-	#bg-grid {
-		z-index: 1;
-	}
-
-	#bg-particles {
-		z-index: 2;
-	}
-
-	/* The grid is a pointer affordance only, so hide it where there is no fine pointer. */
-	@media (hover: none), (pointer: coarse) {
-		#bg-grid {
-			display: none;
-		}
 	}
 </style>
 
@@ -71,52 +31,61 @@ const { enable } = backgroundConfig;
 
 	const TAU = Math.PI * 2;
 	const DPR_MAX = 2;
-	const COLOR_LEVELS = 8;
-	/** Radius of the cursor falloff applied to the grid, in px. */
-	const REACT_RADIUS = 190;
-	/** Gap between a node and the start of its connector, as on the official site. */
-	const NODE_GAP = 10;
-	/** Size of the pre-rendered mote sprite, in px. */
-	const PARTICLE_SPRITE = 64;
+	const GLOW_SPRITE_SIZE = 96;
+	const ATTRACTION_RADIUS = 190;
+	const MAX_ATTRACTION = 52;
 
+	type RGB = [number, number, number];
 	type Palette = {
-		blobs: string[];
-		glow: string;
-		lineRGB: [number, number, number];
-		lineAlpha: number;
-		lineBoost: number;
-		dotAlpha: number;
-		dotBoost: number;
-		particleAlpha: number;
-		particleComposite: GlobalCompositeOperation;
-		composite: GlobalCompositeOperation;
+		core: RGB;
+		orbit: string;
+		ring: string;
+		dark: boolean;
+	};
+	type Orbit = {
+		cx: number;
+		cy: number;
+		rx: number;
+		ry: number;
+		rotation: number;
+		dash: number[];
+	};
+	type Star = {
+		orbit: Orbit;
+		phase: number;
+		speed: number;
+		radius: number;
+		alpha: number;
+		glow: boolean;
+		ring: boolean;
+		offsetX: number;
+		offsetY: number;
+		velocityX: number;
+		velocityY: number;
+	};
+	type Meteor = {
+		x: number;
+		y: number;
+		vx: number;
+		vy: number;
+		age: number;
+		duration: number;
+		length: number;
 	};
 
-	/**
-	 * The site hue is an oklch hue, set as a plain number on :root by the theme
-	 * colour picker.
-	 */
 	function readHue(): number {
-		const raw = getComputedStyle(document.documentElement).getPropertyValue(
-			"--hue",
-		);
+		const raw = getComputedStyle(document.documentElement).getPropertyValue("--hue");
 		const value = Number.parseFloat(raw);
 		return Number.isFinite(value) ? value : 250;
 	}
 
-	// A 1x1 offscreen canvas, used to convert any CSS colour (including the
-	// theme's oklch accent) into the sRGB bytes a 2d context can draw.
 	const probe = document.createElement("canvas");
 	probe.width = 1;
 	probe.height = 1;
 	const probeCtx = probe.getContext("2d", { willReadFrequently: true });
 	const SENTINEL = "#ff00ff";
 
-	/**
-	 * A 2d context silently ignores a fillStyle it cannot parse, so a sentinel
-	 * colour is painted first to detect rejection and let the caller fall back.
-	 */
-	function resolveCSSColor(cssColor: string): [number, number, number] | null {
+	function resolveCSSColor(cssColor: string): RGB | null {
 		if (!probeCtx || !cssColor) return null;
 		probeCtx.fillStyle = SENTINEL;
 		probeCtx.fillStyle = cssColor;
@@ -128,390 +97,323 @@ const { enable } = backgroundConfig;
 		return [data[0], data[1], data[2]];
 	}
 
-	/**
-	 * The theme accent colour (--primary, itself built from --hue), so the grid
-	 * and the pointer glow follow the theme colour picker instead of a hard-coded
-	 * blue that only matched the default hue of 250.
-	 *
-	 * Note the accent is an oklch colour, whose hue is not the same number as the
-	 * equivalent hsl() hue (oklch hue 250 resolves to about hsl hue 209), which is
-	 * why the glow is derived from the accent rather than from `hsl(var(--hue))`.
-	 */
-	function accentRGB(hue: number, dark: boolean): [number, number, number] {
-		const primary = getComputedStyle(document.documentElement)
-			.getPropertyValue("--primary")
-			.trim();
-		return (
-			resolveCSSColor(primary) ??
-			resolveCSSColor(`hsl(${hue} ${dark ? 60 : 55}% ${dark ? 72 : 48}%)`) ??
-			[128, 128, 128]
-		);
+	function rgba(color: RGB, alpha: number): string {
+		return `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
 	}
 
-	function makePalette(hue: number, dark: boolean): Palette {
-		const accent = accentRGB(hue, dark);
-		const [accentR, accentG, accentB] = accent;
-		if (dark) {
-			return {
-				blobs: [
-					`hsl(${hue} 85% 62% / 0.16)`,
-					`hsl(${(hue + 45) % 360} 80% 60% / 0.12)`,
-					`hsl(${(hue + 315) % 360} 78% 66% / 0.1)`,
-					`hsl(${(hue + 180) % 360} 70% 58% / 0.08)`,
-				],
-				glow: `rgba(${accentR},${accentG},${accentB},0.24)`,
-				lineRGB: accent,
-				lineAlpha: 0.16,
-				lineBoost: 0.5,
-				dotAlpha: 0.3,
-				dotBoost: 0.55,
-				// Additive blending is what makes the motes read as light on a dark page.
-				particleAlpha: 0.55,
-				particleComposite: "lighter",
-				composite: "lighter",
-			};
-		}
+	function makePalette(dark: boolean): Palette {
+		const styles = getComputedStyle(document.documentElement);
+		const hue = readHue();
+		const accent =
+			resolveCSSColor(styles.getPropertyValue("--primary").trim()) ??
+			resolveCSSColor(`hsl(${hue} 60% ${dark ? 72 : 48}%)`) ??
+			[128, 128, 128];
+		const lightCore =
+			resolveCSSColor(styles.getPropertyValue("--btn-content").trim()) ?? accent;
+		const core: RGB = dark
+			? [
+					Math.round(accent[0] + (255 - accent[0]) * 0.3),
+					Math.round(accent[1] + (255 - accent[1]) * 0.3),
+					Math.round(accent[2] + (255 - accent[2]) * 0.3),
+				]
+			: lightCore;
 		return {
-			blobs: [
-				`hsl(${hue} 70% 62% / 0.1)`,
-				`hsl(${(hue + 45) % 360} 66% 62% / 0.08)`,
-				`hsl(${(hue + 315) % 360} 64% 64% / 0.07)`,
-				`hsl(${(hue + 180) % 360} 60% 60% / 0.05)`,
-			],
-			glow: `rgba(${accentR},${accentG},${accentB},0.16)`,
-			lineRGB: accent,
-			lineAlpha: 0.13,
-			lineBoost: 0.45,
-			dotAlpha: 0.28,
-			dotBoost: 0.5,
-			// Additive light would just wash out on a light page, so the motes are
-			// painted as soft accent-coloured dots instead.
-			particleAlpha: 0.32,
-			particleComposite: "source-over",
-			composite: "source-over",
+			core,
+			orbit: rgba(core, dark ? 0.25 : 0.21),
+			ring: rgba(core, dark ? 0.45 : 0.34),
+			dark,
 		};
+	}
+
+	function buildGlowSprite(color: RGB): HTMLCanvasElement | null {
+		const sprite = document.createElement("canvas");
+		sprite.width = GLOW_SPRITE_SIZE;
+		sprite.height = GLOW_SPRITE_SIZE;
+		const ctx = sprite.getContext("2d");
+		if (!ctx) return null;
+		const centre = GLOW_SPRITE_SIZE / 2;
+		const gradient = ctx.createRadialGradient(centre, centre, 0, centre, centre, centre);
+		gradient.addColorStop(0, rgba(color, 0.85));
+		gradient.addColorStop(0.18, rgba(color, 0.38));
+		gradient.addColorStop(0.5, rgba(color, 0.1));
+		gradient.addColorStop(1, rgba(color, 0));
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, GLOW_SPRITE_SIZE, GLOW_SPRITE_SIZE);
+		return sprite;
 	}
 
 	function initBackground(root: HTMLElement) {
-		const fluidEl = root.querySelector<HTMLCanvasElement>("#bg-fluid");
-		const gridEl = root.querySelector<HTMLCanvasElement>("#bg-grid");
-		const particleEl = root.querySelector<HTMLCanvasElement>("#bg-particles");
-		if (!fluidEl || !gridEl || !particleEl) return;
-		const fluidCtxEl = fluidEl.getContext("2d");
-		const gridCtxEl = gridEl.getContext("2d");
-		const particleCtxEl = particleEl.getContext("2d");
-		if (!fluidCtxEl || !gridCtxEl || !particleCtxEl) return;
+		const canvasEl = root.querySelector<HTMLCanvasElement>("#bg-planets");
+		const contextEl = canvasEl?.getContext("2d");
+		if (!canvasEl || !contextEl) return;
+		const canvas: HTMLCanvasElement = canvasEl;
+		const context: CanvasRenderingContext2D = contextEl;
 
-		// Explicitly non-nullable aliases: TypeScript does not carry the narrowing
-		// of the consts above into the nested functions declared below.
-		const fluidCanvas: HTMLCanvasElement = fluidEl;
-		const gridCanvas: HTMLCanvasElement = gridEl;
-		const particleCanvas: HTMLCanvasElement = particleEl;
-		const fluidCtx: CanvasRenderingContext2D = fluidCtxEl;
-		const gridCtx: CanvasRenderingContext2D = gridCtxEl;
-		const particleCtx: CanvasRenderingContext2D = particleCtxEl;
-
-		const wantGrid = backgroundConfig.grid;
-		const wantGlow = backgroundConfig.glow;
-		const wantBlobs = backgroundConfig.blobs;
-		const wantParticles = backgroundConfig.particles;
-		const particleCount = Math.max(0, backgroundConfig.particleCount || 100);
-		const gridSize = Math.max(40, backgroundConfig.gridSize || 90);
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+		const configuredCount = Math.max(0, backgroundConfig.particleCount || 100);
 
-		let w = 0;
-		let h = 0;
-		let cols = 0;
-		let rows = 0;
-		let nodes = new Float32Array(0);
-		let nodeFalloff = new Float32Array(0);
-
-		let dark = document.documentElement.classList.contains("dark");
-		let hue = readHue();
-		let palette = makePalette(hue, dark);
-		let lineColors: string[] = [];
-		let dotColors: string[] = [];
-		let particleSprite: HTMLCanvasElement | null = null;
-
-		let pointerActive = false;
-		let rawX = 0;
-		let rawY = 0;
-		let curX = 0;
-		let curY = 0;
-		let strength = 0;
-		let target = 0;
+		let width = 0;
+		let height = 0;
+		let orbits: Orbit[] = [];
+		let stars: Star[] = [];
+		let meteors: Meteor[] = [];
+		let nextMeteorAt = 1400 + Math.random() * 2200;
+		let palette = makePalette(document.documentElement.classList.contains("dark"));
+		let glowSprite = buildGlowSprite(palette.core);
 		let raf = 0;
 		let lastFrameTime = 0;
+		let pointerX = 0;
+		let pointerY = 0;
+		let pointerStrength = 0;
+		let pointerTarget = 0;
 
-		type Particle = {
-			x: number;
-			y: number;
-			size: number;
-			vx: number;
-			vy: number;
-			phase: number;
-			rate: number;
-			wobble: number;
-		};
-
-		const particles: Particle[] = [];
-
-		/** particleCount is calibrated at a 1600x1000 viewport. */
-		function particleTargetCount(): number {
-			const scaled = Math.round(particleCount * ((w * h) / (1600 * 1000)));
-			return Math.max(12, Math.min(400, scaled));
+		function orbitPoint(orbit: Orbit, angle: number): [number, number] {
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
+			const rotationCos = Math.cos(orbit.rotation);
+			const rotationSin = Math.sin(orbit.rotation);
+			return [
+				orbit.cx + orbit.rx * cos * rotationCos - orbit.ry * sin * rotationSin,
+				orbit.cy + orbit.rx * cos * rotationSin + orbit.ry * sin * rotationCos,
+			];
 		}
 
-		function spawnParticle(anywhere: boolean): Particle {
-			const speed = 5 + Math.random() * 13; // px per second
-			const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2; // mostly rising
-			return {
-				x: Math.random() * w,
-				y: anywhere ? Math.random() * h : h + 8,
-				size: 0.7 + Math.random() * 1.6,
-				vx: Math.cos(angle) * speed,
-				vy: Math.sin(angle) * speed,
-				phase: Math.random() * TAU,
-				rate: 0.0006 + Math.random() * 0.0016, // radians per ms
-				wobble: 0.3 + Math.random() * 0.9,
-			};
+		function createOrbit(
+			cx: number,
+			cy: number,
+			rx: number,
+			ry: number,
+			rotation: number,
+			dash: number[] = [],
+		): Orbit {
+			return { cx, cy, rx, ry, rotation, dash };
 		}
 
-		function buildParticles() {
-			particles.length = 0;
-			const target = particleTargetCount();
-			for (let i = 0; i < target; i++) particles.push(spawnParticle(true));
-		}
+		function buildScene() {
+			const cx = width * 0.5;
+			const cy = height * 0.52;
+			const radius = Math.max(130, Math.min(430, Math.min(width, height) * 0.4));
+			orbits = [
+				createOrbit(cx, cy, radius, radius * 0.88, -0.08),
+				createOrbit(cx, cy, radius * 1.08, radius * 0.3, -0.32),
+				createOrbit(cx, cy, radius * 0.54, radius * 0.54, 0, [3, 8]),
+				createOrbit(cx, cy, radius * 0.82, radius * 0.42, 1.05, [1, 7]),
+			];
 
-		/**
-		 * Each mote is pre-rendered once into a small sprite and then blitted, so the
-		 * frame loop never allocates a radial gradient per particle per frame.
-		 */
-		function buildParticleSprite(r: number, g: number, b: number) {
-			const sprite = document.createElement("canvas");
-			sprite.width = PARTICLE_SPRITE;
-			sprite.height = PARTICLE_SPRITE;
-			const ctx = sprite.getContext("2d");
-			if (!ctx) return null;
-			const centre = PARTICLE_SPRITE / 2;
-			const grad = ctx.createRadialGradient(centre, centre, 0, centre, centre, centre);
-			grad.addColorStop(0, `rgba(${r},${g},${b},1)`);
-			grad.addColorStop(0.25, `rgba(${r},${g},${b},0.5)`);
-			grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-			ctx.fillStyle = grad;
-			ctx.fillRect(0, 0, PARTICLE_SPRITE, PARTICLE_SPRITE);
-			return sprite;
-		}
-
-		function buildColors() {
-			const [r, g, b] = palette.lineRGB;
-			lineColors = [];
-			dotColors = [];
-			for (let i = 0; i < COLOR_LEVELS; i++) {
-				const f = i / (COLOR_LEVELS - 1);
-				lineColors.push(
-					`rgba(${r},${g},${b},${(palette.lineAlpha + f * palette.lineBoost).toFixed(3)})`,
-				);
-				dotColors.push(
-					`rgba(${r},${g},${b},${(palette.dotAlpha + f * palette.dotBoost).toFixed(3)})`,
-				);
-			}
-			particleSprite = buildParticleSprite(r, g, b);
-		}
-
-		function buildNodes() {
-			cols = Math.max(2, Math.ceil(w / gridSize) + 1);
-			rows = Math.max(2, Math.ceil(h / gridSize) + 1);
-			const offsetX = (w - (cols - 1) * gridSize) / 2;
-			const offsetY = (h - (rows - 1) * gridSize) / 2;
-			nodes = new Float32Array(cols * rows * 2);
-			nodeFalloff = new Float32Array(cols * rows);
-			for (let r = 0; r < rows; r++) {
-				for (let c = 0; c < cols; c++) {
-					const i = r * cols + c;
-					nodes[i * 2] = offsetX + c * gridSize;
-					nodes[i * 2 + 1] = offsetY + r * gridSize;
+			const scaledCount = Math.round(
+				configuredCount * ((width * height) / (1600 * 1000)),
+			);
+			const count = configuredCount === 0 ? 0 : Math.max(24, Math.min(240, scaledCount));
+			stars = [];
+			for (let i = 0; i < count; i++) {
+				const onVisibleOrbit = Math.random() < 0.68;
+				let orbit: Orbit;
+				if (onVisibleOrbit) {
+					orbit = orbits[i % orbits.length];
+				} else {
+					const distance = Math.sqrt(Math.random()) * radius * 0.83;
+					orbit = createOrbit(
+						cx,
+						cy,
+						distance,
+						distance * (0.76 + Math.random() * 0.24),
+						Math.random() * TAU,
+					);
 				}
+				const ring = i % 19 === 0;
+				stars.push({
+					orbit,
+					phase: Math.random() * TAU,
+					speed:
+						(0.012 + Math.random() * 0.035) *
+						(Math.random() < 0.5 ? -1 : 1) *
+						(onVisibleOrbit ? 1 : 0.45),
+					radius: ring ? 3.2 + Math.random() * 1.2 : 0.8 + Math.random() ** 2 * 3.1,
+					alpha: 0.35 + Math.random() * 0.65,
+					glow: i % 5 === 0 || ring,
+					ring,
+					offsetX: 0,
+					offsetY: 0,
+					velocityX: 0,
+					velocityY: 0,
+				});
 			}
 		}
 
 		function resize() {
-			w = window.innerWidth;
-			h = window.innerHeight;
+			width = window.innerWidth;
+			height = window.innerHeight;
 			const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
-			for (const canvas of [fluidCanvas, gridCanvas, particleCanvas]) {
-				canvas.width = Math.round(w * dpr);
-				canvas.height = Math.round(h * dpr);
-			}
-			fluidCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-			gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-			particleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-			buildNodes();
-			buildParticles();
+			canvas.width = Math.round(width * dpr);
+			canvas.height = Math.round(height * dpr);
+			context.setTransform(dpr, 0, 0, dpr, 0, 0);
+			buildScene();
 		}
 
-		/** Quadratic falloff from the eased pointer position, per grid node. */
-		function computeFalloff() {
-			const active = finePointer.matches && strength > 0.002;
-			for (let i = 0; i < nodeFalloff.length; i++) {
-				if (!active) {
-					nodeFalloff[i] = 0;
-					continue;
-				}
-				const dx = nodes[i * 2] - curX;
-				const dy = nodes[i * 2 + 1] - curY;
-				const d2 = dx * dx + dy * dy;
-				if (d2 >= REACT_RADIUS * REACT_RADIUS) {
-					nodeFalloff[i] = 0;
-					continue;
-				}
-				const t = 1 - Math.sqrt(d2) / REACT_RADIUS;
-				nodeFalloff[i] = t * t * strength;
-			}
-		}
-
-		function level(f: number): number {
-			const i = (f * (COLOR_LEVELS - 1) + 0.5) | 0;
-			return i < 0 ? 0 : i > COLOR_LEVELS - 1 ? COLOR_LEVELS - 1 : i;
-		}
-
-		/** 90px cross-lattice, identical geometry to the official homepage grid. */
-		function drawGrid() {
-			gridCtx.clearRect(0, 0, w, h);
-			if (!wantGrid || !finePointer.matches) return;
-
-			for (let r = 0; r < rows; r++) {
-				for (let c = 0; c < cols - 1; c++) {
-					const a = r * cols + c;
-					const b = a + 1;
-					const f = Math.max(nodeFalloff[a], nodeFalloff[b]);
-					gridCtx.strokeStyle = lineColors[level(f)];
-					gridCtx.lineWidth = 0.5 + f * 1.1;
-					gridCtx.beginPath();
-					gridCtx.moveTo(nodes[a * 2] + NODE_GAP, nodes[a * 2 + 1]);
-					gridCtx.lineTo(nodes[b * 2] - NODE_GAP, nodes[b * 2 + 1]);
-					gridCtx.stroke();
-				}
-			}
-
-			for (let c = 0; c < cols; c++) {
-				for (let r = 0; r < rows - 1; r++) {
-					const a = r * cols + c;
-					const b = a + cols;
-					const f = Math.max(nodeFalloff[a], nodeFalloff[b]);
-					gridCtx.strokeStyle = lineColors[level(f)];
-					gridCtx.lineWidth = 0.5 + f * 1.1;
-					gridCtx.beginPath();
-					gridCtx.moveTo(nodes[a * 2], nodes[a * 2 + 1] + NODE_GAP);
-					gridCtx.lineTo(nodes[b * 2], nodes[b * 2 + 1] - NODE_GAP);
-					gridCtx.stroke();
-				}
-			}
-
-			for (let i = 0; i < nodeFalloff.length; i++) {
-				const f = nodeFalloff[i];
-				gridCtx.beginPath();
-				gridCtx.arc(nodes[i * 2], nodes[i * 2 + 1], 1.8 + f * 3.2, 0, TAU);
-				gridCtx.fillStyle = dotColors[level(f)];
-				gridCtx.fill();
-			}
-		}
-
-		/**
-		 * Optional multi-hue drifting blobs, plus the pointer bloom.
-		 * With `blobs` off (the default) this layer only ever draws the bloom, so
-		 * the page background stays a single flat colour.
-		 */
-		function drawFluid(t: number) {
-			fluidCtx.globalCompositeOperation = "source-over";
-			fluidCtx.clearRect(0, 0, w, h);
-			fluidCtx.globalCompositeOperation = palette.composite;
-
-			if (wantBlobs) {
-				const reach = Math.max(w, h);
-				for (let i = 0; i < palette.blobs.length; i++) {
-					const phase = i * 1.7;
-					const speed = 0.00007 + i * 0.000021;
-					let bx = w * (0.18 + 0.21 * i) + Math.sin(t * speed + phase) * w * 0.15;
-					let by =
-						h * (0.24 + 0.17 * ((i * 2) % 3)) +
-						Math.cos(t * speed * 1.27 + phase) * h * 0.17;
-					bx += (curX - bx) * 0.05 * strength;
-					by += (curY - by) * 0.05 * strength;
-					const radius = reach * (0.32 + 0.05 * i);
-					const grad = fluidCtx.createRadialGradient(bx, by, 0, bx, by, radius);
-					grad.addColorStop(0, palette.blobs[i]);
-					grad.addColorStop(1, "rgba(0,0,0,0)");
-					fluidCtx.fillStyle = grad;
-					fluidCtx.fillRect(bx - radius, by - radius, radius * 2, radius * 2);
-				}
-			}
-
-			if (wantGlow && finePointer.matches && strength > 0.002) {
-				const radius = 280;
-				const grad = fluidCtx.createRadialGradient(
-					curX,
-					curY,
+		function drawOrbits() {
+			context.lineWidth = 0.75;
+			context.strokeStyle = palette.orbit;
+			for (const orbit of orbits) {
+				context.setLineDash(orbit.dash);
+				context.beginPath();
+				context.ellipse(
+					orbit.cx,
+					orbit.cy,
+					orbit.rx,
+					orbit.ry,
+					orbit.rotation,
 					0,
-					curX,
-					curY,
-					radius,
+					TAU,
 				);
-				grad.addColorStop(0, palette.glow);
-				grad.addColorStop(1, "rgba(0,0,0,0)");
-				fluidCtx.fillStyle = grad;
-				fluidCtx.fillRect(curX - radius, curY - radius, radius * 2, radius * 2);
+				context.stroke();
 			}
-
-			fluidCtx.globalCompositeOperation = "source-over";
+			context.setLineDash([]);
 		}
 
-		/**
-		 * Drifting, twinkling glow motes. Deliberately single-colour (the theme
-		 * accent), so they sparkle over the flat background without reintroducing
-		 * the multi-hue wash that the blobs used to create.
-		 */
-		function drawParticles(t: number, dt: number) {
-			particleCtx.clearRect(0, 0, w, h);
-			if (!wantParticles || !particleSprite) return;
-			particleCtx.globalCompositeOperation = palette.particleComposite;
-			const drift = t * 0.00035;
-			for (const p of particles) {
-				p.x += (p.vx + Math.sin(drift + p.phase) * p.wobble * 9) * dt;
-				p.y += (p.vy + Math.cos(drift * 1.3 + p.phase) * p.wobble * 6) * dt;
+		function updateStar(star: Star, dt: number): [number, number] {
+			star.phase = (star.phase + star.speed * dt) % TAU;
+			const [anchorX, anchorY] = orbitPoint(star.orbit, star.phase);
+			const x = anchorX + star.offsetX;
+			const y = anchorY + star.offsetY;
+			let desiredX = 0;
+			let desiredY = 0;
 
-				// Recycle off-screen motes on the opposite edge.
-				if (p.y < -12) {
-					p.y = h + 12;
-					p.x = Math.random() * w;
-				} else if (p.y > h + 12) {
-					p.y = -12;
+			if (pointerStrength > 0.002) {
+				const dx = pointerX - x;
+				const dy = pointerY - y;
+				const distance = Math.hypot(dx, dy);
+				if (distance > 0.001 && distance < ATTRACTION_RADIUS) {
+					const falloff = 1 - distance / ATTRACTION_RADIUS;
+					const pull = falloff * falloff * MAX_ATTRACTION * pointerStrength;
+					desiredX = (dx / distance) * pull;
+					desiredY = (dy / distance) * pull;
 				}
-				if (p.x < -12) p.x = w + 12;
-				else if (p.x > w + 12) p.x = -12;
-
-				// Twinkle: a slow per-particle sine between a dim and a bright state.
-				const twinkle = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * p.rate + p.phase));
-				const size = p.size * PARTICLE_SPRITE * 0.42;
-				particleCtx.globalAlpha = twinkle * palette.particleAlpha;
-				particleCtx.drawImage(
-					particleSprite,
-					p.x - size / 2,
-					p.y - size / 2,
-					size,
-					size,
-				);
 			}
-			particleCtx.globalAlpha = 1;
-			particleCtx.globalCompositeOperation = "source-over";
+
+			const spring = 24;
+			const damping = 10;
+			star.velocityX += ((desiredX - star.offsetX) * spring - star.velocityX * damping) * dt;
+			star.velocityY += ((desiredY - star.offsetY) * spring - star.velocityY * damping) * dt;
+			star.offsetX += star.velocityX * dt;
+			star.offsetY += star.velocityY * dt;
+
+			const displacement = Math.hypot(star.offsetX, star.offsetY);
+			if (displacement > MAX_ATTRACTION) {
+				const scale = MAX_ATTRACTION / displacement;
+				star.offsetX *= scale;
+				star.offsetY *= scale;
+			}
+			return [anchorX + star.offsetX, anchorY + star.offsetY];
+		}
+
+		function spawnMeteor() {
+			const direction = Math.random() < 0.5 ? -1 : 1;
+			const speed = 300 + Math.random() * 220;
+			const angle = 0.38 + Math.random() * 0.35;
+			meteors.push({
+				x:
+					direction < 0
+						? width * (0.45 + Math.random() * 0.65)
+						: width * (-0.1 + Math.random() * 0.65),
+				y: -30 + Math.random() * Math.max(40, height * 0.2),
+				vx: Math.cos(angle) * speed * direction,
+				vy: Math.sin(angle) * speed,
+				age: 0,
+				duration: 1.1 + Math.random() * 0.8,
+				length: 90 + Math.random() * 110,
+			});
+		}
+
+		function drawMeteors(t: number, dt: number) {
+			if (t >= nextMeteorAt) {
+				spawnMeteor();
+				nextMeteorAt = t + 3200 + Math.random() * 4800;
+			}
+
+			context.lineCap = "round";
+			context.globalCompositeOperation = palette.dark ? "lighter" : "source-over";
+			for (let i = meteors.length - 1; i >= 0; i--) {
+				const meteor = meteors[i];
+				meteor.age += dt;
+				meteor.x += meteor.vx * dt;
+				meteor.y += meteor.vy * dt;
+				if (
+					meteor.age >= meteor.duration ||
+					meteor.y - meteor.length > height ||
+					meteor.x < -meteor.length ||
+					meteor.x > width + meteor.length
+				) {
+					meteors.splice(i, 1);
+					continue;
+				}
+
+				const progress = meteor.age / meteor.duration;
+				const fade = Math.sin(progress * Math.PI) * (palette.dark ? 0.85 : 0.55);
+				const speed = Math.hypot(meteor.vx, meteor.vy);
+				const tailX = meteor.x - (meteor.vx / speed) * meteor.length;
+				const tailY = meteor.y - (meteor.vy / speed) * meteor.length;
+				const gradient = context.createLinearGradient(tailX, tailY, meteor.x, meteor.y);
+				gradient.addColorStop(0, rgba(palette.core, 0));
+				gradient.addColorStop(0.65, rgba(palette.core, 0.28));
+				gradient.addColorStop(1, rgba(palette.core, 1));
+
+				context.globalAlpha = fade;
+				context.strokeStyle = gradient;
+				context.lineWidth = palette.dark ? 1.5 : 1.2;
+				context.shadowBlur = palette.dark ? 12 : 0;
+				context.shadowColor = rgba(palette.core, 0.8);
+				context.beginPath();
+				context.moveTo(tailX, tailY);
+				context.lineTo(meteor.x, meteor.y);
+				context.stroke();
+
+				context.fillStyle = rgba(palette.core, 1);
+				context.beginPath();
+				context.arc(meteor.x, meteor.y, 1.7, 0, TAU);
+				context.fill();
+			}
+			context.shadowBlur = 0;
+			context.globalAlpha = 1;
+			context.globalCompositeOperation = "source-over";
 		}
 
 		function render(t: number, dt: number) {
-			computeFalloff();
-			drawFluid(t);
-			drawGrid();
-			drawParticles(t, dt);
+			context.clearRect(0, 0, width, height);
+			drawOrbits();
+			pointerStrength += (pointerTarget - pointerStrength) * Math.min(1, dt * 10);
+			if (pointerTarget === 0 && pointerStrength < 0.002) pointerStrength = 0;
+
+			for (const star of stars) {
+				const [x, y] = updateStar(star, dt);
+				const twinkle = 0.72 + Math.sin(t * 0.0012 + star.phase) * 0.28;
+				const alpha = star.alpha * twinkle * (palette.dark ? 0.82 : 0.62);
+
+				if (palette.dark && star.glow && glowSprite) {
+					const size = star.radius * 11;
+					context.globalCompositeOperation = "lighter";
+					context.globalAlpha = alpha * 0.72;
+					context.drawImage(glowSprite, x - size / 2, y - size / 2, size, size);
+					context.globalCompositeOperation = "source-over";
+				}
+
+				context.globalAlpha = alpha;
+				context.fillStyle = rgba(palette.core, 1);
+				context.beginPath();
+				context.arc(x, y, star.radius, 0, TAU);
+				context.fill();
+
+				if (star.ring) {
+					context.strokeStyle = palette.ring;
+					context.lineWidth = 0.8;
+					context.beginPath();
+					context.arc(x, y, star.radius * 2.35, 0, TAU);
+					context.stroke();
+				}
+			}
+			drawMeteors(t, dt);
+			context.globalAlpha = 1;
+			context.globalCompositeOperation = "source-over";
 		}
 
 		function schedule() {
@@ -521,99 +423,67 @@ const { enable } = backgroundConfig;
 
 		function frame(t: number) {
 			raf = 0;
-			// Clamped so a backgrounded tab does not teleport the motes on resume.
-			const dt = lastFrameTime ? Math.min(0.05, (t - lastFrameTime) / 1000) : 0;
+			const dt = lastFrameTime ? Math.min(0.033, (t - lastFrameTime) / 1000) : 0;
 			lastFrameTime = t;
-			if (pointerActive) {
-				const dx = rawX - curX;
-				const dy = rawY - curY;
-				// Easing constants match the official cursor canvas.
-				const n = Math.hypot(dx, dy) < 50 ? 0.7 : 0.4;
-				curX += dx * n;
-				curY += dy * n;
-			}
-			strength += (target - strength) * 0.24;
-			if (!pointerActive && strength < 0.002) strength = 0;
-
 			render(t, dt);
 			schedule();
 		}
 
-		function onPointerMove(e: PointerEvent) {
-			rawX = e.clientX;
-			rawY = e.clientY;
-			if (!pointerActive) {
-				// Avoid sliding in from a stale position on re-entry.
-				if (strength < 0.002) {
-					curX = rawX;
-					curY = rawY;
-				}
-				pointerActive = true;
-			}
-			target = 1;
+		function onPointerMove(event: PointerEvent) {
+			pointerX = event.clientX;
+			pointerY = event.clientY;
+			pointerTarget = 1;
 			schedule();
 		}
 
 		function onPointerLeave() {
-			pointerActive = false;
-			target = 0;
+			pointerTarget = 0;
 			schedule();
 		}
 
-		buildColors();
-		resize();
-		curX = w / 2;
-		curY = h / 2;
+		function onResize() {
+			resize();
+			if (reduceMotion.matches) render(0, 0);
+		}
 
+		function refreshPalette() {
+			palette = makePalette(document.documentElement.classList.contains("dark"));
+			glowSprite = buildGlowSprite(palette.core);
+			if (reduceMotion.matches) render(0, 0);
+			else schedule();
+		}
+
+		resize();
 		if (reduceMotion.matches) {
 			render(0, 0);
 		} else {
+			schedule();
 			if (finePointer.matches) {
 				window.addEventListener("pointermove", onPointerMove, { passive: true });
 				window.addEventListener("pointerdown", onPointerMove, { passive: true });
 				document.addEventListener("pointerleave", onPointerLeave);
 				window.addEventListener("blur", onPointerLeave);
 			}
-			schedule();
 		}
 
-		window.addEventListener(
-			"resize",
-			() => {
-				resize();
-				if (reduceMotion.matches) render(0, 0);
-			},
-			{ passive: true },
-		);
-
+		window.addEventListener("resize", onResize, { passive: true });
 		document.addEventListener("visibilitychange", () => {
 			if (document.hidden) {
 				if (raf) cancelAnimationFrame(raf);
 				raf = 0;
+				lastFrameTime = 0;
 			} else {
 				schedule();
 			}
 		});
 
-		// Repaint when the visitor switches light/dark mode or the theme hue changes.
-		const observer = new MutationObserver(() => {
-			const nextDark = document.documentElement.classList.contains("dark");
-			const nextHue = readHue();
-			if (nextDark === dark && nextHue === hue) return;
-			dark = nextDark;
-			hue = nextHue;
-			palette = makePalette(hue, dark);
-			buildColors();
-			if (reduceMotion.matches) render(0, 0);
-			else schedule();
-		});
+		const observer = new MutationObserver(refreshPalette);
 		observer.observe(document.documentElement, {
 			attributes: true,
 			attributeFilter: ["class", "style"],
 		});
 	}
 
-	// Idempotent: the layer lives outside the Swup containers, so it survives navigation.
 	const root = document.getElementById("bg-effect");
 	if (root && root.dataset.ready !== "1") {
 		root.dataset.ready = "1";
