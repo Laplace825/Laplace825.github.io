@@ -83,7 +83,7 @@ url = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 # Orbital background (canvas layer rendered behind all content, so text is never affected)
 [background]
 enable = true          # Master switch for the animated planetary background
-particleCount = 100    # Approximate number of stars at a 1600x1000 viewport; scaled
+particleCount = 130    # Approximate number of stars at a 1600x1000 viewport; scaled
                        # to the real viewport area and clamped to 24..240
 cursorTrail = false    # Legacy DOM cursor-trail dots. Drawn ON TOP of text (z-index 9999), so it is off by default
 

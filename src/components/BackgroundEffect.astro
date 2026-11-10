@@ -119,8 +119,8 @@ const { enable } = backgroundConfig;
 			: lightCore;
 		return {
 			core,
-			orbit: rgba(core, dark ? 0.25 : 0.21),
-			ring: rgba(core, dark ? 0.45 : 0.34),
+			orbit: rgba(core, dark ? 0.25 : 0.41),
+			ring: rgba(core, dark ? 0.45 : 0.64),
 			dark,
 		};
 	}
@@ -328,7 +328,7 @@ const { enable } = backgroundConfig;
 		function drawMeteors(t: number, dt: number) {
 			if (t >= nextMeteorAt) {
 				spawnMeteor();
-				nextMeteorAt = t + 3200 + Math.random() * 4800;
+				nextMeteorAt = t + 2200 + Math.random() * 4800;
 			}
 
 			context.lineCap = "round";
