@@ -1,4 +1,7 @@
 const TAU = Math.PI * 2;
+// Canvas coordinates have positive Y downward. Cycle through both signs on
+// each axis so a run of meteors never all falls the same way.
+const METEOR_HEADINGS = [Math.PI - 0.5, -Math.PI / 2, 0.55, -2.48, 1.37, -0.46];
 
 function seededRandom(seed: number) {
 	return () => {
@@ -61,94 +64,250 @@ function drawSky(ctx: CanvasRenderingContext2D, width: number, height: number, h
 	}
 }
 
-function spawnMeteor(width: number, height: number) {
-	const direction = Math.random() < 0.75 ? 1 : -1;
-	const angle = 0.36 + Math.random() * 0.30;
-	const ax = Math.cos(angle) * direction;
+function spawnMeteor(width: number, height: number, heading: number) {
+	const angle = heading + (Math.random() - 0.5) * 0.29;
+	const ax = Math.cos(angle);
 	const ay = Math.sin(angle);
-	const scale = Math.min(1, width / 820);
+	const scale = 0.46 + 0.54 * Math.min(1, width / 820);
+	const x = width * (0.27 + Math.random() * 0.46);
+	const y = height * (0.22 + Math.random() * 0.56);
+	const duration = 0.95 + Math.random() * 0.55;
+	const room = Math.min(Math.min(x, width - x) / Math.abs(ax), Math.min(y, height - y) / Math.abs(ay));
+	const speed = Math.min((380 + Math.random() * 190) * scale, (2 * room) / duration);
+	const halfTravel = (speed * duration) / 2;
 	return {
-		x: width * (direction > 0 ? 0.06 + Math.random() * 0.45 : 0.64 + Math.random() * 0.30),
-		y: height * (0.04 + Math.random() * 0.29),
+		x: x - ax * halfTravel,
+		y: y - ay * halfTravel,
 		ax,
 		ay,
-		speed: (380 + Math.random() * 190) * (0.46 + 0.54 * scale),
-		length: (100 + Math.random() * 110) * (0.46 + 0.54 * scale),
+		speed,
+		length: (100 + Math.random() * 110) * scale,
 		age: 0,
-		duration: 0.95 + Math.random() * 0.55,
+		duration,
 	};
 }
 
-export function createStarfield(skyCanvas: HTMLCanvasElement, meteorCanvas: HTMLCanvasElement) {
+function makeDust(width: number, height: number) {
+	const random = seededRandom(41751);
+	const count = Math.min(112, Math.round(42 + (width * height) / 19000));
+	return Array.from({ length: count }, (_, i) => {
+		const u = (i + random()) / count;
+		const across = (random() + random() - 1) * 0.18;
+		return {
+			x: u * width,
+			y: (bandCenter(u) + across) * height,
+			radius: 1.4 + random() ** 2 * 3.2,
+			alpha: 0.28 + random() * 0.46,
+			dx: 0,
+			dy: 0,
+		};
+	});
+}
+
+function spawnFlare(width: number, height: number) {
+	const u = 0.18 + Math.random() * 0.59;
+	return {
+		x: u * width,
+		y: (bandCenter(u) + (Math.random() - 0.5) * 0.10) * height,
+		radius: Math.min(46, 22 + Math.min(width, height) / 42),
+		angle: Math.random() * TAU,
+		duration: 1.7,
+		age: 0,
+	};
+}
+
+export function createStarfield(skyCanvas: HTMLCanvasElement, effectCanvas: HTMLCanvasElement) {
 	const sky = skyCanvas.getContext("2d");
-	const trail = meteorCanvas.getContext("2d");
-	if (!sky || !trail) return;
+	const effectContext = effectCanvas.getContext("2d");
+	const dustSprite = document.createElement("canvas");
+	dustSprite.width = dustSprite.height = 32;
+	const dustContext = dustSprite.getContext("2d");
+	if (!sky || !effectContext || !dustContext) return;
+	const effects = effectContext;
 	let width = 0;
 	let height = 0;
 	let hue = 250;
 	let dark = false;
 	let meteorColor = "";
-	let countdown = 1.6;
+	let meteorCountdown = 1.6;
+	let headingIndex = Math.floor(Math.random() * METEOR_HEADINGS.length);
 	let meteor: ReturnType<typeof spawnMeteor> | undefined;
+	let flareCountdown = 6.5 + Math.random() * 2.5;
+	let flare: ReturnType<typeof spawnFlare> | undefined;
+	let dust: ReturnType<typeof makeDust> = [];
+	let pointerX = Number.NaN;
+	let pointerY = 0;
+	let dustMoving = false;
+	let dirty = false;
+
+	function paintDust(dt: number) {
+		effects.clearRect(0, 0, width, height);
+		const radius = Math.min(180, Math.max(105, width * 0.135));
+		const radiusSquared = radius * radius;
+		const ease = 1 - Math.exp(-7 * dt);
+		dustMoving = false;
+		for (const grain of dust) {
+			const x = pointerX - grain.x;
+			const y = pointerY - grain.y;
+			const distanceSquared = x * x + y * y;
+			let dx = 0;
+			let dy = 0;
+			if (distanceSquared < radiusSquared) {
+				const pull = 0.68 * (1 - distanceSquared / radiusSquared) ** 2;
+				dx = x * pull;
+				dy = y * pull;
+			}
+			const stepX = dx - grain.dx;
+			const stepY = dy - grain.dy;
+			if (Math.abs(stepX) + Math.abs(stepY) > 0.06) {
+				grain.dx += stepX * ease;
+				grain.dy += stepY * ease;
+				dustMoving = true;
+			} else {
+				grain.dx = dx;
+				grain.dy = dy;
+			}
+			const r = grain.radius;
+			const glow = 1 + Math.min(0.33, (Math.abs(grain.dx) + Math.abs(grain.dy)) / 75);
+			effects.globalAlpha = grain.alpha * (dark ? 1 : 0.7) * glow;
+			effects.drawImage(dustSprite, grain.x + grain.dx - r, grain.y + grain.dy - r, 2 * r, 2 * r);
+		}
+	}
+
+	function paintMeteor(active: NonNullable<typeof meteor>) {
+		const { ax, ay, speed, length, age, duration } = active;
+		const x = active.x + ax * speed * age;
+		const y = active.y + ay * speed * age;
+		const tailX = x - ax * length;
+		const tailY = y - ay * length;
+		const gradient = effects.createLinearGradient(tailX, tailY, x, y);
+		gradient.addColorStop(0, `hsl(${meteorColor} / 0)`);
+		gradient.addColorStop(0.68, `hsl(${meteorColor} / 0.22)`);
+		gradient.addColorStop(1, `hsl(${meteorColor})`);
+		effects.globalAlpha = Math.sin((age / duration) * Math.PI) * (dark ? 0.98 : 0.65);
+		effects.lineCap = "round";
+		effects.strokeStyle = gradient;
+		effects.lineWidth = dark ? 2.1 : 1.5;
+		effects.shadowBlur = dark ? 12 : 0;
+		effects.shadowColor = `hsl(${meteorColor})`;
+		effects.beginPath();
+		effects.moveTo(tailX, tailY);
+		effects.lineTo(x, y);
+		effects.stroke();
+		effects.fillStyle = `hsl(${meteorColor})`;
+		effects.beginPath();
+		effects.arc(x, y, 1.7, 0, TAU);
+		effects.fill();
+		effects.shadowBlur = 0;
+	}
+
+	function paintFlare(active: NonNullable<typeof flare>) {
+		const { x, y, age, duration, radius, angle } = active;
+		const progress = age / duration;
+		const envelope = Math.sin(Math.PI * progress ** 0.60);
+		const wave = radius * (0.12 + 0.88 * progress);
+		effects.globalAlpha = envelope * (dark ? 0.22 : 0.15);
+		effects.lineWidth = 0.8;
+		effects.strokeStyle = `hsl(${meteorColor})`;
+		effects.beginPath();
+		effects.arc(x, y, wave, 0, TAU);
+		effects.stroke();
+
+		const halo = radius * (0.35 + progress * 0.42);
+		effects.globalAlpha = envelope * (dark ? 0.44 : 0.30);
+		effects.drawImage(dustSprite, x - halo, y - halo, 2 * halo, 2 * halo);
+		effects.fillStyle = effects.strokeStyle;
+		effects.beginPath();
+		for (let i = 0; i < 6; i++) {
+			const ray = angle + (i * TAU) / 6 + (i % 2) * 0.15;
+			const distance = wave * (0.64 + (i % 3) * 0.12);
+			const px = x + Math.cos(ray) * distance;
+			const py = y + Math.sin(ray) * distance;
+			effects.moveTo(px + 1, py);
+			effects.arc(px, py, 1, 0, TAU);
+		}
+		effects.fill();
+	}
 
 	return {
 		resize() {
 			width = skyCanvas.clientWidth;
 			height = skyCanvas.clientHeight;
 			const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-			skyCanvas.width = meteorCanvas.width = Math.round(width * dpr);
-			skyCanvas.height = meteorCanvas.height = Math.round(height * dpr);
+			skyCanvas.width = effectCanvas.width = Math.round(width * dpr);
+			skyCanvas.height = effectCanvas.height = Math.round(height * dpr);
 			sky.setTransform(dpr, 0, 0, dpr, 0, 0);
-			trail.setTransform(dpr, 0, 0, dpr, 0, 0);
+			effects.setTransform(dpr, 0, 0, dpr, 0, 0);
+			dust = makeDust(width, height);
+			meteor = undefined;
+			flare = undefined;
 			drawSky(sky, width, height, hue, dark);
+			paintDust(0);
 		},
 		setPalette(nextHue: number, nextDark: boolean) {
 			hue = nextHue;
 			dark = nextDark;
 			meteorColor = `${hue - 30} 85% ${dark ? 86 : 43}%`;
-			if (width && height) drawSky(sky, width, height, hue, dark);
+			const tint = `${hue - 15} 78% ${dark ? 81 : 48}%`;
+			const glow = dustContext.createRadialGradient(16, 16, 0, 16, 16, 16);
+			glow.addColorStop(0, `hsl(${tint} / 0.95)`);
+			glow.addColorStop(0.27, `hsl(${tint} / 0.44)`);
+			glow.addColorStop(1, `hsl(${tint} / 0)`);
+			dustContext.clearRect(0, 0, 32, 32);
+			dustContext.fillStyle = glow;
+			dustContext.fillRect(0, 0, 32, 32);
+			if (width && height) {
+				drawSky(sky, width, height, hue, dark);
+				paintDust(0);
+				if (meteor) paintMeteor(meteor);
+				if (flare) paintFlare(flare);
+			}
 		},
-		clearMeteors() {
-			if (!meteor) return;
+		setPointer(x: number, y: number) {
+			pointerX = x;
+			pointerY = y;
+			dirty = true;
+		},
+		releasePointer() {
+			if (Number.isNaN(pointerX)) return;
+			pointerX = Number.NaN;
+			dirty = true;
+		},
+		resetMotion() {
+			pointerX = Number.NaN;
 			meteor = undefined;
-			trail.clearRect(0, 0, width, height);
+			flare = undefined;
+			for (const grain of dust) {
+				grain.dx = 0;
+				grain.dy = 0;
+			}
+			paintDust(0);
 		},
-		renderMeteors(dt: number) {
-			countdown -= dt;
-			if (countdown <= 0) {
-				meteor = spawnMeteor(width, height);
-				countdown = 3.1 + Math.random() * 3.4;
+		render(dt: number) {
+			meteorCountdown -= dt;
+			flareCountdown -= dt;
+			if (flareCountdown <= 0 && !meteor) {
+				flare = spawnFlare(width, height);
+				flareCountdown = 17 + Math.random() * 14;
 			}
-			if (!meteor) return;
-			trail.clearRect(0, 0, width, height);
-			meteor.age += dt;
-			if (meteor.age >= meteor.duration) {
-				meteor = undefined;
-				return;
+			if (meteorCountdown <= 0 && !flare) {
+				meteor = spawnMeteor(width, height, METEOR_HEADINGS[headingIndex]);
+				headingIndex = (headingIndex + 1) % METEOR_HEADINGS.length;
+				meteorCountdown = 3.1 + Math.random() * 3.4;
 			}
-			const { ax, ay, speed, length, age, duration } = meteor;
-			const x = meteor.x + ax * speed * age;
-			const y = meteor.y + ay * speed * age;
-			const tailX = x - ax * length;
-			const tailY = y - ay * length;
-			const gradient = trail.createLinearGradient(tailX, tailY, x, y);
-			gradient.addColorStop(0, `hsl(${meteorColor} / 0)`);
-			gradient.addColorStop(0.68, `hsl(${meteorColor} / 0.22)`);
-			gradient.addColorStop(1, `hsl(${meteorColor})`);
-			trail.globalAlpha = Math.sin((age / duration) * Math.PI) * (dark ? 0.98 : 0.65);
-			trail.lineCap = "round";
-			trail.strokeStyle = gradient;
-			trail.lineWidth = dark ? 2.1 : 1.5;
-			trail.shadowBlur = dark ? 12 : 0;
-			trail.shadowColor = `hsl(${meteorColor})`;
-			trail.beginPath();
-			trail.moveTo(tailX, tailY);
-			trail.lineTo(x, y);
-			trail.stroke();
-			trail.fillStyle = `hsl(${meteorColor})`;
-			trail.beginPath();
-			trail.arc(x, y, 1.7, 0, TAU);
-			trail.fill();
+			if (!meteor && !flare && !dustMoving && !dirty) return;
+			dirty = false;
+			paintDust(dt);
+			if (meteor) {
+				meteor.age += dt;
+				if (meteor.age < meteor.duration) paintMeteor(meteor);
+				else meteor = undefined;
+			}
+			if (flare) {
+				flare.age += dt;
+				if (flare.age < flare.duration) paintFlare(flare);
+				else flare = undefined;
+			}
 		},
 	};
 }

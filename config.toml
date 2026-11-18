@@ -80,8 +80,8 @@ enable = true
 name = "CC BY-NC-SA 4.0"
 url = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 
-# Deep-space background with a ringed Three.js planet, nebula and meteors.
-# Without WebGL 2, the nebula, stars and meteors are still shown.
+# Deep-space background with a ring-shadowed planet, orbiting moon and pointer-reactive nebula.
+# Without WebGL 2, the nebula, meteors and occasional starbursts are still shown.
 [background]
 enable = true          # Show the space scene behind the content
 particleCount = 130    # Glowing ring particles (0 disables them; maximum 320)

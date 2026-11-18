@@ -8,7 +8,7 @@ const { enable } = backgroundConfig;
 	<div id="bg-effect" aria-hidden="true">
 		<canvas id="bg-sky"></canvas>
 		<canvas id="bg-dot-planet"></canvas>
-		<canvas id="bg-meteors"></canvas>
+		<canvas id="bg-sky-effects"></canvas>
 	</div>
 )}
 
@@ -22,7 +22,7 @@ const { enable } = backgroundConfig;
 	}
 
 	#bg-sky,
-	#bg-meteors {
+	#bg-sky-effects {
 		position: absolute;
 		inset: 0;
 		width: 100%;
@@ -54,13 +54,13 @@ const { enable } = backgroundConfig;
 
 	function initBackground(root: HTMLElement) {
 		const skyCanvas = root.querySelector<HTMLCanvasElement>("#bg-sky");
-		const meteorCanvas = root.querySelector<HTMLCanvasElement>("#bg-meteors");
+		const effectsCanvas = root.querySelector<HTMLCanvasElement>("#bg-sky-effects");
 		const planetCanvas = root.querySelector<HTMLCanvasElement>("#bg-dot-planet");
-		if (!skyCanvas || !meteorCanvas || !planetCanvas) return;
+		if (!skyCanvas || !effectsCanvas || !planetCanvas) return;
 
 		const html = document.documentElement;
 		const motion = matchMedia("(prefers-reduced-motion: reduce)");
-		const sky = createStarfield(skyCanvas, meteorCanvas);
+		const sky = createStarfield(skyCanvas, effectsCanvas);
 		let planet: DotPlanet | undefined;
 		let hue = Number.NaN;
 		let dark = false;
@@ -96,8 +96,16 @@ const { enable } = backgroundConfig;
 			const dt = lastFrame === undefined ? 0 : Math.min(0.05, (now - lastFrame) / 1000);
 			lastFrame = now;
 			planet?.render(dt);
-			sky?.renderMeteors(dt);
+			sky?.render(dt);
 			schedule();
+		}
+
+		function onPointerMove(event: PointerEvent) {
+			if (event.pointerType === "mouse" && !motion.matches) sky?.setPointer(event.clientX, event.clientY);
+		}
+
+		function onPointerOut(event: PointerEvent) {
+			if (event.pointerType === "mouse" && !event.relatedTarget) sky?.releasePointer();
 		}
 
 		function syncMotion() {
@@ -105,7 +113,8 @@ const { enable } = backgroundConfig;
 				cancelAnimationFrame(frameId);
 				frameId = 0;
 				lastFrame = undefined;
-				if (motion.matches) sky?.clearMeteors();
+				if (motion.matches) sky?.resetMotion();
+				else sky?.releasePointer();
 			} else {
 				schedule();
 			}
@@ -115,6 +124,11 @@ const { enable } = backgroundConfig;
 		resize();
 		syncMotion();
 		addEventListener("resize", resize, { passive: true });
+		if (sky) {
+			addEventListener("pointermove", onPointerMove, { passive: true });
+			addEventListener("pointerout", onPointerOut, { passive: true });
+			addEventListener("blur", sky.releasePointer);
+		}
 		motion.addEventListener("change", syncMotion);
 		document.addEventListener("visibilitychange", syncMotion);
 		new MutationObserver(refreshPalette).observe(html, {
