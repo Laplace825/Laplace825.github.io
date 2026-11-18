@@ -124,7 +124,7 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 };
 
 export const backgroundConfig: BackgroundConfig = {
-	enable: tomlConfig.background?.enable ?? true, // Master switch for the orbital background
-	particleCount: tomlConfig.background?.particleCount || 100, // Count at a 1600x1000 viewport
+	enable: tomlConfig.background?.enable ?? true,
+	particleCount: tomlConfig.background?.particleCount ?? 100, // Blinking particles in the planet's rings
 	cursorTrail: tomlConfig.background?.cursorTrail ?? false, // Legacy DOM cursor-trail dots
 };

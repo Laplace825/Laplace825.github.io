@@ -68,7 +68,7 @@ export const tomlConfig = {
   },
   "background": {
     "enable": true,
-    "particleCount": 100,
+    "particleCount": 130,
     "cursorTrail": false
   },
   "expressiveCode": {

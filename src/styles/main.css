@@ -27,6 +27,18 @@
       0 10px 30px -12px var(--glass-shadow),
       0 2px 8px -2px var(--glass-shadow);
   }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card-base.card-glass {
+      background-color: var(--card-bg);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .card-base.card-glass {
+      background-color: var(--card-bg);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
   /* The reading surface uses the same translucent fill as other content cards,
      with a quieter sheen for long-form copy. No backdrop-filter: re-blurring the
      largest card on every background frame is unnecessarily expensive. */

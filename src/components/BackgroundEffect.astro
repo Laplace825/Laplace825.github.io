@@ -6,7 +6,9 @@ const { enable } = backgroundConfig;
 
 {enable && (
 	<div id="bg-effect" aria-hidden="true">
-		<canvas id="bg-planets"></canvas>
+		<canvas id="bg-sky"></canvas>
+		<canvas id="bg-dot-planet"></canvas>
+		<canvas id="bg-meteors"></canvas>
 	</div>
 )}
 
@@ -19,474 +21,122 @@ const { enable } = backgroundConfig;
 		pointer-events: none;
 	}
 
-	#bg-planets {
-		display: block;
+	#bg-sky,
+	#bg-meteors {
+		position: absolute;
+		inset: 0;
 		width: 100%;
 		height: 100%;
+	}
+
+	#bg-dot-planet {
+		position: absolute;
+		top: 47%;
+		left: 76%;
+		width: min(70rem, 96vw);
+		aspect-ratio: 1.45;
+		transform: translate(-50%, -50%);
+	}
+
+	@media (max-width: 767px) {
+		#bg-dot-planet {
+			top: 34%;
+			left: 67%;
+			width: min(138vw, 44rem);
+		}
 	}
 </style>
 
 <script>
 	import { backgroundConfig } from "../config";
-
-	const TAU = Math.PI * 2;
-	const DPR_MAX = 2;
-	const GLOW_SPRITE_SIZE = 96;
-	const ATTRACTION_RADIUS = 190;
-	const MAX_ATTRACTION = 52;
-
-	type RGB = [number, number, number];
-	type Palette = {
-		core: RGB;
-		orbit: string;
-		ring: string;
-		dark: boolean;
-	};
-	type Orbit = {
-		cx: number;
-		cy: number;
-		rx: number;
-		ry: number;
-		rotation: number;
-		dash: number[];
-	};
-	type Star = {
-		orbit: Orbit;
-		phase: number;
-		speed: number;
-		radius: number;
-		alpha: number;
-		glow: boolean;
-		ring: boolean;
-		offsetX: number;
-		offsetY: number;
-		velocityX: number;
-		velocityY: number;
-	};
-	type Meteor = {
-		x: number;
-		y: number;
-		vx: number;
-		vy: number;
-		age: number;
-		duration: number;
-		length: number;
-	};
-
-	function readHue(): number {
-		const raw = getComputedStyle(document.documentElement).getPropertyValue("--hue");
-		const value = Number.parseFloat(raw);
-		return Number.isFinite(value) ? value : 250;
-	}
-
-	const probe = document.createElement("canvas");
-	probe.width = 1;
-	probe.height = 1;
-	const probeCtx = probe.getContext("2d", { willReadFrequently: true });
-	const SENTINEL = "#ff00ff";
-
-	function resolveCSSColor(cssColor: string): RGB | null {
-		if (!probeCtx || !cssColor) return null;
-		probeCtx.fillStyle = SENTINEL;
-		probeCtx.fillStyle = cssColor;
-		probeCtx.clearRect(0, 0, 1, 1);
-		probeCtx.fillRect(0, 0, 1, 1);
-		const data = probeCtx.getImageData(0, 0, 1, 1).data;
-		if (data[3] === 0) return null;
-		if (data[0] === 255 && data[1] === 0 && data[2] === 255) return null;
-		return [data[0], data[1], data[2]];
-	}
-
-	function rgba(color: RGB, alpha: number): string {
-		return `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
-	}
-
-	function makePalette(dark: boolean): Palette {
-		const styles = getComputedStyle(document.documentElement);
-		const hue = readHue();
-		const accent =
-			resolveCSSColor(styles.getPropertyValue("--primary").trim()) ??
-			resolveCSSColor(`hsl(${hue} 60% ${dark ? 72 : 48}%)`) ??
-			[128, 128, 128];
-		const lightCore =
-			resolveCSSColor(styles.getPropertyValue("--btn-content").trim()) ?? accent;
-		const core: RGB = dark
-			? [
-					Math.round(accent[0] + (255 - accent[0]) * 0.3),
-					Math.round(accent[1] + (255 - accent[1]) * 0.3),
-					Math.round(accent[2] + (255 - accent[2]) * 0.3),
-				]
-			: lightCore;
-		return {
-			core,
-			orbit: rgba(core, dark ? 0.25 : 0.41),
-			ring: rgba(core, dark ? 0.45 : 0.64),
-			dark,
-		};
-	}
-
-	function buildGlowSprite(color: RGB): HTMLCanvasElement | null {
-		const sprite = document.createElement("canvas");
-		sprite.width = GLOW_SPRITE_SIZE;
-		sprite.height = GLOW_SPRITE_SIZE;
-		const ctx = sprite.getContext("2d");
-		if (!ctx) return null;
-		const centre = GLOW_SPRITE_SIZE / 2;
-		const gradient = ctx.createRadialGradient(centre, centre, 0, centre, centre, centre);
-		gradient.addColorStop(0, rgba(color, 0.85));
-		gradient.addColorStop(0.18, rgba(color, 0.38));
-		gradient.addColorStop(0.5, rgba(color, 0.1));
-		gradient.addColorStop(1, rgba(color, 0));
-		ctx.fillStyle = gradient;
-		ctx.fillRect(0, 0, GLOW_SPRITE_SIZE, GLOW_SPRITE_SIZE);
-		return sprite;
-	}
+	import { createStarfield } from "../utils/starfield";
+	import type { DotPlanet } from "../utils/dot-planet";
 
 	function initBackground(root: HTMLElement) {
-		const canvasEl = root.querySelector<HTMLCanvasElement>("#bg-planets");
-		const contextEl = canvasEl?.getContext("2d");
-		if (!canvasEl || !contextEl) return;
-		const canvas: HTMLCanvasElement = canvasEl;
-		const context: CanvasRenderingContext2D = contextEl;
+		const skyCanvas = root.querySelector<HTMLCanvasElement>("#bg-sky");
+		const meteorCanvas = root.querySelector<HTMLCanvasElement>("#bg-meteors");
+		const planetCanvas = root.querySelector<HTMLCanvasElement>("#bg-dot-planet");
+		if (!skyCanvas || !meteorCanvas || !planetCanvas) return;
 
-		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-		const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-		const configuredCount = Math.max(0, backgroundConfig.particleCount || 100);
+		const html = document.documentElement;
+		const motion = matchMedia("(prefers-reduced-motion: reduce)");
+		const sky = createStarfield(skyCanvas, meteorCanvas);
+		let planet: DotPlanet | undefined;
+		let hue = Number.NaN;
+		let dark = false;
+		let frameId = 0;
+		let lastFrame: number | undefined;
 
-		let width = 0;
-		let height = 0;
-		let orbits: Orbit[] = [];
-		let stars: Star[] = [];
-		let meteors: Meteor[] = [];
-		let nextMeteorAt = 1400 + Math.random() * 2200;
-		let palette = makePalette(document.documentElement.classList.contains("dark"));
-		let glowSprite = buildGlowSprite(palette.core);
-		let raf = 0;
-		let lastFrameTime = 0;
-		let pointerX = 0;
-		let pointerY = 0;
-		let pointerStrength = 0;
-		let pointerTarget = 0;
-
-		function orbitPoint(orbit: Orbit, angle: number): [number, number] {
-			const cos = Math.cos(angle);
-			const sin = Math.sin(angle);
-			const rotationCos = Math.cos(orbit.rotation);
-			const rotationSin = Math.sin(orbit.rotation);
-			return [
-				orbit.cx + orbit.rx * cos * rotationCos - orbit.ry * sin * rotationSin,
-				orbit.cy + orbit.rx * cos * rotationSin + orbit.ry * sin * rotationCos,
-			];
-		}
-
-		function createOrbit(
-			cx: number,
-			cy: number,
-			rx: number,
-			ry: number,
-			rotation: number,
-			dash: number[] = [],
-		): Orbit {
-			return { cx, cy, rx, ry, rotation, dash };
-		}
-
-		function buildScene() {
-			const cx = width * 0.5;
-			const cy = height * 0.52;
-			const radius = Math.max(130, Math.min(430, Math.min(width, height) * 0.4));
-			orbits = [
-				createOrbit(cx, cy, radius, radius * 0.88, -0.08),
-				createOrbit(cx, cy, radius * 1.08, radius * 0.3, -0.32),
-				createOrbit(cx, cy, radius * 0.54, radius * 0.54, 0, [3, 8]),
-				createOrbit(cx, cy, radius * 0.82, radius * 0.42, 1.05, [1, 7]),
-			];
-
-			const scaledCount = Math.round(
-				configuredCount * ((width * height) / (1600 * 1000)),
-			);
-			const count = configuredCount === 0 ? 0 : Math.max(24, Math.min(240, scaledCount));
-			stars = [];
-			for (let i = 0; i < count; i++) {
-				const onVisibleOrbit = Math.random() < 0.68;
-				let orbit: Orbit;
-				if (onVisibleOrbit) {
-					orbit = orbits[i % orbits.length];
-				} else {
-					const distance = Math.sqrt(Math.random()) * radius * 0.83;
-					orbit = createOrbit(
-						cx,
-						cy,
-						distance,
-						distance * (0.76 + Math.random() * 0.24),
-						Math.random() * TAU,
-					);
-				}
-				const ring = i % 19 === 0;
-				stars.push({
-					orbit,
-					phase: Math.random() * TAU,
-					speed:
-						(0.012 + Math.random() * 0.035) *
-						(Math.random() < 0.5 ? -1 : 1) *
-						(onVisibleOrbit ? 1 : 0.45),
-					radius: ring ? 3.2 + Math.random() * 1.2 : 0.8 + Math.random() ** 2 * 3.1,
-					alpha: 0.35 + Math.random() * 0.65,
-					glow: i % 5 === 0 || ring,
-					ring,
-					offsetX: 0,
-					offsetY: 0,
-					velocityX: 0,
-					velocityY: 0,
-				});
-			}
+		function refreshPalette() {
+			const value = Number.parseFloat(getComputedStyle(html).getPropertyValue("--hue"));
+			const nextHue = Number.isFinite(value) ? value : 250;
+			const nextDark = html.classList.contains("dark");
+			if (nextHue === hue && nextDark === dark) return;
+			hue = nextHue;
+			dark = nextDark;
+			sky?.setPalette(hue, dark);
+			planet?.setPalette(hue, dark);
+			if (motion.matches) planet?.render(0);
 		}
 
 		function resize() {
-			width = window.innerWidth;
-			height = window.innerHeight;
-			const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
-			canvas.width = Math.round(width * dpr);
-			canvas.height = Math.round(height * dpr);
-			context.setTransform(dpr, 0, 0, dpr, 0, 0);
-			buildScene();
-		}
-
-		function drawOrbits() {
-			context.lineWidth = 0.75;
-			context.strokeStyle = palette.orbit;
-			for (const orbit of orbits) {
-				context.setLineDash(orbit.dash);
-				context.beginPath();
-				context.ellipse(
-					orbit.cx,
-					orbit.cy,
-					orbit.rx,
-					orbit.ry,
-					orbit.rotation,
-					0,
-					TAU,
-				);
-				context.stroke();
-			}
-			context.setLineDash([]);
-		}
-
-		function updateStar(star: Star, dt: number): [number, number] {
-			star.phase = (star.phase + star.speed * dt) % TAU;
-			const [anchorX, anchorY] = orbitPoint(star.orbit, star.phase);
-			const x = anchorX + star.offsetX;
-			const y = anchorY + star.offsetY;
-			let desiredX = 0;
-			let desiredY = 0;
-
-			if (pointerStrength > 0.002) {
-				const dx = pointerX - x;
-				const dy = pointerY - y;
-				const distance = Math.hypot(dx, dy);
-				if (distance > 0.001 && distance < ATTRACTION_RADIUS) {
-					const falloff = 1 - distance / ATTRACTION_RADIUS;
-					const pull = falloff * falloff * MAX_ATTRACTION * pointerStrength;
-					desiredX = (dx / distance) * pull;
-					desiredY = (dy / distance) * pull;
-				}
-			}
-
-			const spring = 24;
-			const damping = 10;
-			star.velocityX += ((desiredX - star.offsetX) * spring - star.velocityX * damping) * dt;
-			star.velocityY += ((desiredY - star.offsetY) * spring - star.velocityY * damping) * dt;
-			star.offsetX += star.velocityX * dt;
-			star.offsetY += star.velocityY * dt;
-
-			const displacement = Math.hypot(star.offsetX, star.offsetY);
-			if (displacement > MAX_ATTRACTION) {
-				const scale = MAX_ATTRACTION / displacement;
-				star.offsetX *= scale;
-				star.offsetY *= scale;
-			}
-			return [anchorX + star.offsetX, anchorY + star.offsetY];
-		}
-
-		function spawnMeteor() {
-			const direction = Math.random() < 0.5 ? -1 : 1;
-			const speed = 300 + Math.random() * 220;
-			const angle = 0.38 + Math.random() * 0.35;
-			meteors.push({
-				x:
-					direction < 0
-						? width * (0.45 + Math.random() * 0.65)
-						: width * (-0.1 + Math.random() * 0.65),
-				y: -30 + Math.random() * Math.max(40, height * 0.2),
-				vx: Math.cos(angle) * speed * direction,
-				vy: Math.sin(angle) * speed,
-				age: 0,
-				duration: 1.1 + Math.random() * 0.8,
-				length: 90 + Math.random() * 110,
-			});
-		}
-
-		function drawMeteors(t: number, dt: number) {
-			if (t >= nextMeteorAt) {
-				spawnMeteor();
-				nextMeteorAt = t + 2200 + Math.random() * 4800;
-			}
-
-			context.lineCap = "round";
-			context.globalCompositeOperation = palette.dark ? "lighter" : "source-over";
-			for (let i = meteors.length - 1; i >= 0; i--) {
-				const meteor = meteors[i];
-				meteor.age += dt;
-				meteor.x += meteor.vx * dt;
-				meteor.y += meteor.vy * dt;
-				if (
-					meteor.age >= meteor.duration ||
-					meteor.y - meteor.length > height ||
-					meteor.x < -meteor.length ||
-					meteor.x > width + meteor.length
-				) {
-					meteors.splice(i, 1);
-					continue;
-				}
-
-				const progress = meteor.age / meteor.duration;
-				const fade = Math.sin(progress * Math.PI) * (palette.dark ? 0.85 : 0.55);
-				const speed = Math.hypot(meteor.vx, meteor.vy);
-				const tailX = meteor.x - (meteor.vx / speed) * meteor.length;
-				const tailY = meteor.y - (meteor.vy / speed) * meteor.length;
-				const gradient = context.createLinearGradient(tailX, tailY, meteor.x, meteor.y);
-				gradient.addColorStop(0, rgba(palette.core, 0));
-				gradient.addColorStop(0.65, rgba(palette.core, 0.28));
-				gradient.addColorStop(1, rgba(palette.core, 1));
-
-				context.globalAlpha = fade;
-				context.strokeStyle = gradient;
-				context.lineWidth = palette.dark ? 1.5 : 1.2;
-				context.shadowBlur = palette.dark ? 12 : 0;
-				context.shadowColor = rgba(palette.core, 0.8);
-				context.beginPath();
-				context.moveTo(tailX, tailY);
-				context.lineTo(meteor.x, meteor.y);
-				context.stroke();
-
-				context.fillStyle = rgba(palette.core, 1);
-				context.beginPath();
-				context.arc(meteor.x, meteor.y, 1.7, 0, TAU);
-				context.fill();
-			}
-			context.shadowBlur = 0;
-			context.globalAlpha = 1;
-			context.globalCompositeOperation = "source-over";
-		}
-
-		function render(t: number, dt: number) {
-			context.clearRect(0, 0, width, height);
-			drawOrbits();
-			pointerStrength += (pointerTarget - pointerStrength) * Math.min(1, dt * 10);
-			if (pointerTarget === 0 && pointerStrength < 0.002) pointerStrength = 0;
-
-			for (const star of stars) {
-				const [x, y] = updateStar(star, dt);
-				const twinkle = 0.72 + Math.sin(t * 0.0012 + star.phase) * 0.28;
-				const alpha = star.alpha * twinkle * (palette.dark ? 0.82 : 0.62);
-
-				if (palette.dark && star.glow && glowSprite) {
-					const size = star.radius * 11;
-					context.globalCompositeOperation = "lighter";
-					context.globalAlpha = alpha * 0.72;
-					context.drawImage(glowSprite, x - size / 2, y - size / 2, size, size);
-					context.globalCompositeOperation = "source-over";
-				}
-
-				context.globalAlpha = alpha;
-				context.fillStyle = rgba(palette.core, 1);
-				context.beginPath();
-				context.arc(x, y, star.radius, 0, TAU);
-				context.fill();
-
-				if (star.ring) {
-					context.strokeStyle = palette.ring;
-					context.lineWidth = 0.8;
-					context.beginPath();
-					context.arc(x, y, star.radius * 2.35, 0, TAU);
-					context.stroke();
-				}
-			}
-			drawMeteors(t, dt);
-			context.globalAlpha = 1;
-			context.globalCompositeOperation = "source-over";
+			sky?.resize();
+			planet?.resize();
+			if (motion.matches) planet?.render(0);
 		}
 
 		function schedule() {
-			if (raf || document.hidden || reduceMotion.matches) return;
-			raf = requestAnimationFrame(frame);
-		}
-
-		function frame(t: number) {
-			raf = 0;
-			const dt = lastFrameTime ? Math.min(0.033, (t - lastFrameTime) / 1000) : 0;
-			lastFrameTime = t;
-			render(t, dt);
-			schedule();
-		}
-
-		function onPointerMove(event: PointerEvent) {
-			pointerX = event.clientX;
-			pointerY = event.clientY;
-			pointerTarget = 1;
-			schedule();
-		}
-
-		function onPointerLeave() {
-			pointerTarget = 0;
-			schedule();
-		}
-
-		function onResize() {
-			resize();
-			if (reduceMotion.matches) render(0, 0);
-		}
-
-		function refreshPalette() {
-			palette = makePalette(document.documentElement.classList.contains("dark"));
-			glowSprite = buildGlowSprite(palette.core);
-			if (reduceMotion.matches) render(0, 0);
-			else schedule();
-		}
-
-		resize();
-		if (reduceMotion.matches) {
-			render(0, 0);
-		} else {
-			schedule();
-			if (finePointer.matches) {
-				window.addEventListener("pointermove", onPointerMove, { passive: true });
-				window.addEventListener("pointerdown", onPointerMove, { passive: true });
-				document.addEventListener("pointerleave", onPointerLeave);
-				window.addEventListener("blur", onPointerLeave);
+			if (!frameId && !document.hidden && !motion.matches) {
+				frameId = requestAnimationFrame(frame);
 			}
 		}
 
-		window.addEventListener("resize", onResize, { passive: true });
-		document.addEventListener("visibilitychange", () => {
-			if (document.hidden) {
-				if (raf) cancelAnimationFrame(raf);
-				raf = 0;
-				lastFrameTime = 0;
+		function frame(now: number) {
+			frameId = 0;
+			const dt = lastFrame === undefined ? 0 : Math.min(0.05, (now - lastFrame) / 1000);
+			lastFrame = now;
+			planet?.render(dt);
+			sky?.renderMeteors(dt);
+			schedule();
+		}
+
+		function syncMotion() {
+			if (document.hidden || motion.matches) {
+				cancelAnimationFrame(frameId);
+				frameId = 0;
+				lastFrame = undefined;
+				if (motion.matches) sky?.clearMeteors();
 			} else {
 				schedule();
 			}
-		});
+		}
 
-		const observer = new MutationObserver(refreshPalette);
-		observer.observe(document.documentElement, {
+		refreshPalette();
+		resize();
+		syncMotion();
+		addEventListener("resize", resize, { passive: true });
+		motion.addEventListener("change", syncMotion);
+		document.addEventListener("visibilitychange", syncMotion);
+		new MutationObserver(refreshPalette).observe(html, {
 			attributes: true,
 			attributeFilter: ["class", "style"],
 		});
+
+		const gl = planetCanvas.getContext("webgl2", {
+			antialias: false,
+			powerPreference: "low-power",
+		});
+		if (gl) {
+			void import("../utils/dot-planet").then(({ createDotPlanet }) => {
+				planet = createDotPlanet(planetCanvas, gl, backgroundConfig.particleCount);
+				planet.setPalette(hue, dark);
+				planet.resize();
+				planet.render(0);
+				planetCanvas.addEventListener("webglcontextrestored", () => planet?.render(0));
+			});
+		}
 	}
 
 	const root = document.getElementById("bg-effect");
-	if (root && root.dataset.ready !== "1") {
-		root.dataset.ready = "1";
-		initBackground(root);
-	}
+	if (root) initBackground(root);
 </script>
